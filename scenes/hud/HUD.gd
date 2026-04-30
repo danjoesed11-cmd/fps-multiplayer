@@ -78,7 +78,7 @@ func add_kill_feed_entry(killer: String, victim: String, weapon_id: String) -> v
 
 func _add_simple_kill_feed(killer: String, victim: String) -> void:
 	var lbl := Label.new()
-	lbl.text = "%s eliminated %s" % [killer, victim]
+	lbl.text = "%s zapped %s" % [killer, victim]
 	kill_feed_root.add_child(lbl)
 	while kill_feed_root.get_child_count() > MAX_KILL_FEED:
 		kill_feed_root.get_child(0).queue_free()

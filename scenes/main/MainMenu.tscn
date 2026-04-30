@@ -1,169 +1,193 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/main/MainMenu.gd" id="1_mm"]
+[ext_resource type="Script" path="res://scenes/main/MainMenuBg.gd" id="2_bg"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(1, 1, 1, 0.08)
+[sub_resource type="StyleBoxFlat" id="StyleBox_glass"]
+bg_color = Color(0.04, 0.01, 0.14, 0.82)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 1, 1, 0.18)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-content_margin_left = 32.0
-content_margin_top = 36.0
-content_margin_right = 32.0
-content_margin_bottom = 36.0
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 28.0
+content_margin_top = 28.0
+content_margin_right = 28.0
+content_margin_bottom = 28.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-bg_color = Color(1, 1, 1, 0.12)
+[sub_resource type="StyleBoxFlat" id="StyleBox_input"]
+bg_color = Color(1, 1, 1, 0.1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(1, 1, 1, 0.3)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+border_color = Color(1, 1, 1, 0.28)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 content_margin_left = 14.0
 content_margin_top = 10.0
 content_margin_right = 14.0
 content_margin_bottom = 10.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBox_tab_active"]
+bg_color = Color(1, 1, 1, 0.15)
+border_width_bottom = 3
+border_color = Color(1, 0.85, 0.1, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_tab_inactive"]
+bg_color = Color(1, 1, 1, 0.04)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
 [node name="MainMenu" type="Control"]
 anchors_preset = 15
 script = ExtResource("1_mm")
 
-[node name="BgGradient" type="ColorRect" parent="."]
-anchors_preset = 15
-color = Color(0.18, 0.08, 0.55, 1)
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("2_bg")
 
-[node name="BgGradient2" type="ColorRect" parent="."]
+[node name="Vignette" type="ColorRect" parent="."]
 anchors_preset = 15
-color = Color(0.9, 0.25, 0.1, 0.45)
-
-[node name="Particles" type="GPUParticles2D" parent="."]
-position = Vector2(960, 540)
-amount = 60
-lifetime = 6.0
-explosiveness = 0.0
-randomness = 1.0
-local_coords = false
-draw_order = 0
+color = Color(0, 0, 0, 0)
+mouse_filter = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(460, 0)
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+custom_minimum_size = Vector2(420, 0)
+theme_override_styles/panel = SubResource("StyleBox_glass")
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="CenterContainer/Panel/VBox"]
-text = "💥 FPS MULTIPLAYER"
+[node name="TitleBox" type="VBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/VBox/TitleBox"]
+text = "💥 FPS ZONE"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 38
-theme_override_colors/font_color = Color(1, 0.95, 0.2, 1)
-theme_override_colors/font_shadow_color = Color(1, 0.4, 0.0, 0.9)
+theme_override_font_sizes/font_size = 42
+theme_override_colors/font_color = Color(1.0, 0.92, 0.15, 1)
+theme_override_colors/font_shadow_color = Color(1, 0.4, 0.0, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 4
 
-[node name="Tagline" type="Label" parent="CenterContainer/Panel/VBox"]
-text = "Shoot. Capture. Dominate."
+[node name="Tagline" type="Label" parent="CenterContainer/Panel/VBox/TitleBox"]
+text = "Zap. Capture. Dominate."
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(1, 1, 1, 0.7)
-
-[node name="HSep0" type="HSeparator" parent="CenterContainer/Panel/VBox"]
-modulate = Color(1, 1, 1, 0.2)
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
 
 [node name="NameInput" type="LineEdit" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true
-placeholder_text = "🎮  Enter your name..."
-custom_minimum_size = Vector2(0, 46)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.45)
-
-[node name="SingleplayerButton" type="Button" parent="CenterContainer/Panel/VBox"]
-unique_name_in_owner = true
-text = "⚔  SINGLEPLAYER"
-custom_minimum_size = Vector2(0, 54)
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.1, 0.05, 0.0, 1)
-theme_override_colors/font_hover_color = Color(0.05, 0.02, 0.0, 1)
-theme_override_colors/font_pressed_color = Color(0.1, 0.05, 0.0, 1)
-
-[node name="MultiLabel" type="Label" parent="CenterContainer/Panel/VBox"]
-text = "── MULTIPLAYER ──"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(1, 1, 1, 0.5)
-
-[node name="IPInput" type="LineEdit" parent="CenterContainer/Panel/VBox"]
-unique_name_in_owner = true
-text = "127.0.0.1"
-placeholder_text = "🌐  Server IP address"
-custom_minimum_size = Vector2(0, 44)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
+placeholder_text = "🎮  Your name..."
+custom_minimum_size = Vector2(0, 42)
+theme_override_styles/normal = SubResource("StyleBox_input")
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.45)
+theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.4)
 
-[node name="PortInput" type="LineEdit" parent="CenterContainer/Panel/VBox"]
+[node name="PlayAIButton" type="Button" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true
-text = "7777"
-placeholder_text = "Port"
+text = "🤖  PLAY vs AI"
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 19
+theme_override_colors/font_color = Color(0.08, 0.04, 0.0, 1)
+
+[node name="AISubLabel" type="Label" parent="CenterContainer/Panel/VBox"]
+text = "Solo against bots • No friends needed!"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 1, 1, 0.4)
+
+[node name="Divider" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 8
+
+[node name="Line1" type="HSeparator" parent="CenterContainer/Panel/VBox/Divider"]
+size_flags_horizontal = 3
+modulate = Color(1, 1, 1, 0.18)
+
+[node name="DivLabel" type="Label" parent="CenterContainer/Panel/VBox/Divider"]
+text = "MULTIPLAYER"
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 1, 0.35)
+vertical_alignment = 1
+
+[node name="Line2" type="HSeparator" parent="CenterContainer/Panel/VBox/Divider"]
+size_flags_horizontal = 3
+modulate = Color(1, 1, 1, 0.18)
+
+[node name="IPRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 8
+
+[node name="IPInput" type="LineEdit" parent="CenterContainer/Panel/VBox/IPRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "127.0.0.1"
+placeholder_text = "IP address"
 custom_minimum_size = Vector2(0, 40)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBox_input")
+theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="BtnRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
-theme_override_constants/separation = 12
+[node name="PortInput" type="LineEdit" parent="CenterContainer/Panel/VBox/IPRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 40)
+text = "7777"
+placeholder_text = "Port"
+theme_override_styles/normal = SubResource("StyleBox_input")
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="HostButton" type="Button" parent="CenterContainer/Panel/VBox/BtnRow"]
+[node name="MultiRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 10
+
+[node name="HostButton" type="Button" parent="CenterContainer/Panel/VBox/MultiRow"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
 text = "🖥  HOST"
-custom_minimum_size = Vector2(0, 52)
-theme_override_font_sizes/font_size = 17
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 0.8, 1)
+custom_minimum_size = Vector2(0, 46)
+theme_override_font_sizes/font_size = 16
 
-[node name="JoinButton" type="Button" parent="CenterContainer/Panel/VBox/BtnRow"]
+[node name="JoinButton" type="Button" parent="CenterContainer/Panel/VBox/MultiRow"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
 text = "🔗  JOIN"
-custom_minimum_size = Vector2(0, 52)
-theme_override_font_sizes/font_size = 17
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(0.8, 1, 1, 1)
-
-[node name="HSep3" type="HSeparator" parent="CenterContainer/Panel/VBox"]
-modulate = Color(1, 1, 1, 0.15)
-
-[node name="QuitButton" type="Button" parent="CenterContainer/Panel/VBox"]
-unique_name_in_owner = true
-text = "QUIT"
-custom_minimum_size = Vector2(0, 38)
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(1, 1, 1, 0.55)
-theme_override_colors/font_hover_color = Color(1, 0.5, 0.5, 1)
+custom_minimum_size = Vector2(0, 46)
+theme_override_font_sizes/font_size = 16
 
 [node name="StatusLabel" type="Label" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true
 text = ""
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(1, 0.5, 0.3, 1)
+autowrap_mode = 3
+
+[node name="QuitButton" type="Button" parent="CenterContainer/Panel/VBox"]
+unique_name_in_owner = true
+text = "Quit"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1, 1, 1, 0.35)
+flat = true
 
 [node name="VersionLabel" type="Label" parent="."]
 anchors_preset = 4
@@ -171,10 +195,10 @@ anchor_left = 0.0
 anchor_top = 1.0
 anchor_right = 0.0
 anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = -24.0
+offset_left = 10.0
+offset_top = -22.0
 offset_right = 200.0
 offset_bottom = -4.0
-text = "v0.1.0 — Godot 4"
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(1, 1, 1, 0.3)
+text = "FPS Zone v0.1 — Godot 4"
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 1, 1, 0.22)

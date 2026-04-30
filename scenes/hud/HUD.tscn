@@ -8,13 +8,13 @@ script = ExtResource("1_hud")
 [node name="LowHealthOverlay" type="ColorRect" parent="."]
 unique_name_in_owner = true
 anchors_preset = 15
-color = Color(0.8, 0, 0, 0.35)
+color = Color(0.0, 0.4, 0.9, 0.28)
 mouse_filter = 2
 
 [node name="HitIndicator" type="ColorRect" parent="."]
 unique_name_in_owner = true
 anchors_preset = 15
-color = Color(0.9, 0.1, 0.1, 0.22)
+color = Color(0.9, 0.8, 0.1, 0.20)
 mouse_filter = 2
 visible = false
 
