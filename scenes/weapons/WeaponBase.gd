@@ -85,17 +85,17 @@ func _hitscan_fire(cam: Camera3D) -> void:
 	var result := space.intersect_ray(query)
 
 	if result and multiplayer.is_server():
-		var collider := result.collider
+		var collider: Object = result.collider
 		# Walk up to find a Player node
-		var node := collider
+		var node: Node = collider as Node
 		while node and not node is Player:
 			node = node.get_parent()
 		if node is Player:
 			var victim := node as Player
-			var base_damage := _get_stat("damage")
+			var base_damage: float = _get_stat("damage")
 			var hit_pos: Vector3 = result.position
 			# Headshot check via group
-			var is_headshot := collider.is_in_group("head_hitbox")
+			var is_headshot: bool = (collider as Node).is_in_group("head_hitbox")
 			var final_damage := base_damage * (weapon_data.headshot_multiplier if is_headshot else 1.0)
 			victim.take_damage(final_damage, _owner_id, weapon_data.weapon_id if weapon_data else "unknown")
 

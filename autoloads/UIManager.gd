@@ -38,7 +38,7 @@ func push_screen(scene_path: String) -> CanvasLayer:
 func pop_screen() -> void:
 	if _screen_stack.is_empty():
 		return
-	var screen := _screen_stack.pop_back()
+	var screen: CanvasLayer = _screen_stack.pop_back()
 	if is_instance_valid(screen):
 		screen.queue_free()
 

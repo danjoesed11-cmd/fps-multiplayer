@@ -5,7 +5,6 @@ const THINK_INTERVAL := 0.3
 const ATTACK_RANGE := 25.0
 const WANDER_RANGE := 15.0
 
-var team_id: int = 1
 var _target: Player = null
 var _think_timer: float = 0.0
 var _wander_target: Vector3 = Vector3.ZERO
@@ -36,7 +35,7 @@ func _physics_process(delta: float) -> void:
 		var dist := global_position.distance_to(_target.global_position)
 		if dist < ATTACK_RANGE:
 			_aim_at_target()
-			var wm := weapon_manager.get_current_weapon()
+			var wm: WeaponBase = weapon_manager.get_current_weapon()
 			if wm:
 				wm.attempt_fire()
 

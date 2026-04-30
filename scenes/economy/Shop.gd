@@ -62,7 +62,7 @@ func _populate_upgrades() -> void:
 	var player := GameManager.get_player_node(_my_id)
 	if not player:
 		return
-	var owned := player.weapon_manager.get_owned_weapon_ids()
+	var owned: Array = player.weapon_manager.get_owned_weapon_ids()
 	for weapon_id in owned:
 		var lbl := Label.new()
 		lbl.text = "Upgrades for %s:" % weapon_id

@@ -171,5 +171,5 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 func _on_joined_server(_peer_id: int) -> void:
 	var my_cosmetics := SettingsManager.get_cosmetics()
-	var my_name := SettingsManager.get_setting("display_name", "Player")
+	var my_name: String = SettingsManager.get_setting("display_name", "Player")
 	PlayerRegistry.request_register.rpc_id(1, my_name, my_cosmetics)

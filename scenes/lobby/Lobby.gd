@@ -53,6 +53,6 @@ func _on_ready_pressed() -> void:
 func _on_start_pressed() -> void:
 	if not multiplayer.is_server():
 		return
-	var mode := MODES[mode_option.selected]
-	var map := MAPS[map_option.selected]
+	var mode: String = MODES[mode_option.selected]
+	var map: String = MAPS[map_option.selected]
 	GameManager.start_match(mode, map)

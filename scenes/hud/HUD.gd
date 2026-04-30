@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 
 	var player := GameManager.get_player_node(_my_id)
 	if player:
-		var hp_ratio := player.health / player.max_health
+		var hp_ratio: float = player.health / player.max_health
 		health_bar.value = hp_ratio * 100.0
 		health_label.text = str(int(player.health))
 		low_health_overlay.modulate.a = max(0.0, 0.4 - hp_ratio * 0.8)
@@ -66,7 +66,7 @@ func add_kill_feed_entry(killer: String, victim: String, weapon_id: String) -> v
 	if not ResourceLoader.exists(KILL_FEED_ENTRY_SCENE):
 		_add_simple_kill_feed(killer, victim)
 		return
-	var entry := load(KILL_FEED_ENTRY_SCENE).instantiate()
+	var entry: Node = load(KILL_FEED_ENTRY_SCENE).instantiate()
 	kill_feed_root.add_child(entry)
 	if entry.has_method("setup"):
 		entry.setup(killer, victim, weapon_id)
@@ -105,7 +105,7 @@ func _on_player_damaged(victim_id: int, _attacker_id: int, _amount: float) -> vo
 
 func _on_score_changed(_team_id: int, _score: int) -> void:
 	if GameManager.current_mode_node:
-		var scores := GameManager.current_mode_node.team_scores
+		var scores: Array = GameManager.current_mode_node.team_scores
 		if scores.size() >= 2:
 			team0_score.text = str(scores[0])
 			team1_score.text = str(scores[1])

@@ -24,7 +24,7 @@ func server_add_coins(peer_id: int, amount: int) -> void:
 func server_deduct_coins(peer_id: int, amount: int) -> bool:
 	if not multiplayer.is_server():
 		return false
-	var current := _ledger.get(peer_id, 0)
+	var current: int = _ledger.get(peer_id, 0)
 	if current < amount:
 		return false
 	_ledger[peer_id] = current - amount

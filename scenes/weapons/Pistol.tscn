@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/Pistol.gd" id="1_p"]
+
+[node name="Pistol" type="Node3D"]
+script = ExtResource("1_p")
+
+[node name="MuzzlePoint" type="Marker3D" parent="."]
+position = Vector3(0, 0, -0.5)
+
+[node name="MuzzleFlash" type="GPUParticles3D" parent="."]
+emitting = false
+one_shot = true
+amount = 8
+
+[node name="ReloadTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
