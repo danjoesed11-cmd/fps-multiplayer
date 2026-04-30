@@ -1,0 +1,77 @@
+{
+  "pistol": {
+    "name": "Pistol",
+    "description": "Reliable sidearm. Free starter weapon.",
+    "cost": 0,
+    "slot": 2,
+    "is_starter": true,
+    "scene_path": "res://scenes/weapons/Pistol.tscn",
+    "damage": [20.0, 25.0, 32.0],
+    "fire_rate": [0.25, 0.20, 0.16],
+    "magazine": [12, 15, 18],
+    "reserve": [36, 45, 54],
+    "range": [80.0, 90.0, 100.0]
+  },
+  "assault_rifle": {
+    "name": "Assault Rifle",
+    "description": "Full-auto rifle. Balanced all-rounder.",
+    "cost": 300,
+    "slot": 0,
+    "is_starter": true,
+    "scene_path": "res://scenes/weapons/rifles/AssaultRifle.tscn",
+    "damage": [22.0, 28.0, 35.0],
+    "fire_rate": [0.10, 0.085, 0.07],
+    "magazine": [30, 35, 40],
+    "reserve": [90, 105, 120],
+    "range": [150.0, 175.0, 200.0]
+  },
+  "smg": {
+    "name": "SMG",
+    "description": "Submachine gun. Fast fire rate, short range.",
+    "cost": 250,
+    "slot": 0,
+    "scene_path": "res://scenes/weapons/smgs/SMG.tscn",
+    "damage": [15.0, 18.0, 22.0],
+    "fire_rate": [0.07, 0.06, 0.05],
+    "magazine": [25, 30, 35],
+    "reserve": [75, 90, 105],
+    "range": [80.0, 95.0, 110.0]
+  },
+  "shotgun": {
+    "name": "Shotgun",
+    "description": "Close range devastation. One shot, one kill up close.",
+    "cost": 400,
+    "slot": 0,
+    "scene_path": "res://scenes/weapons/shotguns/PumpShotgun.tscn",
+    "damage": [80.0, 95.0, 115.0],
+    "fire_rate": [0.9, 0.75, 0.60],
+    "magazine": [6, 7, 8],
+    "reserve": [18, 21, 24],
+    "range": [30.0, 35.0, 40.0]
+  },
+  "sniper_rifle": {
+    "name": "Sniper Rifle",
+    "description": "Long range precision. One shot headshots.",
+    "cost": 600,
+    "slot": 1,
+    "scene_path": "res://scenes/weapons/rifles/SniperRifle.tscn",
+    "damage": [90.0, 110.0, 140.0],
+    "fire_rate": [1.5, 1.2, 1.0],
+    "magazine": [5, 6, 8],
+    "reserve": [15, 18, 24],
+    "range": [400.0, 500.0, 600.0]
+  },
+  "rocket_launcher": {
+    "name": "Rocket Launcher",
+    "description": "Area denial. Explosive projectile.",
+    "cost": 800,
+    "slot": 1,
+    "is_hitscan": false,
+    "scene_path": "res://scenes/weapons/special/RocketLauncher.tscn",
+    "damage": [120.0, 145.0, 175.0],
+    "fire_rate": [2.0, 1.75, 1.5],
+    "magazine": [3, 4, 5],
+    "reserve": [9, 12, 15],
+    "range": [200.0, 200.0, 200.0]
+  }
+}

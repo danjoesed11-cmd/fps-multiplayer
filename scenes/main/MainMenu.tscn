@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/main/MainMenu.gd" id="1_mm"]
+
+[node name="MainMenu" type="Control"]
+anchors_preset = 15
+script = ExtResource("1_mm")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+color = Color(0.07, 0.08, 0.12, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchors_preset = 15
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(400, 0)
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="CenterContainer/VBox"]
+text = "FPS MULTIPLAYER"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 40
+
+[node name="NameInput" type="LineEdit" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+placeholder_text = "Enter your name..."
+custom_minimum_size = Vector2(0, 40)
+
+[node name="HSep1" type="HSeparator" parent="CenterContainer/VBox"]
+
+[node name="SingleplayerButton" type="Button" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "SINGLEPLAYER"
+custom_minimum_size = Vector2(0, 50)
+
+[node name="HSep2" type="HSeparator" parent="CenterContainer/VBox"]
+
+[node name="IPInput" type="LineEdit" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "127.0.0.1"
+placeholder_text = "Server IP address"
+custom_minimum_size = Vector2(0, 40)
+
+[node name="PortInput" type="LineEdit" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "7777"
+placeholder_text = "Port"
+custom_minimum_size = Vector2(0, 40)
+
+[node name="HostButton" type="Button" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "HOST GAME"
+custom_minimum_size = Vector2(0, 50)
+
+[node name="JoinButton" type="Button" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "JOIN GAME"
+custom_minimum_size = Vector2(0, 50)
+
+[node name="HSep3" type="HSeparator" parent="CenterContainer/VBox"]
+
+[node name="QuitButton" type="Button" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = "QUIT"
+custom_minimum_size = Vector2(0, 40)
+
+[node name="StatusLabel" type="Label" parent="CenterContainer/VBox"]
+unique_name_in_owner = true
+text = ""
+horizontal_alignment = 1
+modulate = Color(1, 0.4, 0.4, 1)

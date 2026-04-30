@@ -1,0 +1,81 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/lobby/Lobby.gd" id="1_lobby"]
+[ext_resource type="Script" path="res://scenes/lobby/ChatPanel.gd" id="2_chat"]
+
+[node name="Lobby" type="Control"]
+anchors_preset = 15
+script = ExtResource("1_lobby")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+color = Color(0.07, 0.08, 0.12, 1)
+
+[node name="HSplit" type="HSplitContainer" parent="."]
+anchors_preset = 15
+
+[node name="LeftPanel" type="VBoxContainer" parent="HSplit"]
+custom_minimum_size = Vector2(350, 0)
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="HSplit/LeftPanel"]
+text = "LOBBY"
+theme_override_font_sizes/font_size = 28
+
+[node name="PlayerCountLabel" type="Label" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+text = "0 players"
+
+[node name="PlayerList" type="VBoxContainer" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+
+[node name="HSep" type="HSeparator" parent="HSplit/LeftPanel"]
+
+[node name="ModeLabel" type="Label" parent="HSplit/LeftPanel"]
+text = "Game Mode:"
+
+[node name="ModeOption" type="OptionButton" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+
+[node name="MapLabel" type="Label" parent="HSplit/LeftPanel"]
+text = "Map:"
+
+[node name="MapOption" type="OptionButton" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+
+[node name="HSep2" type="HSeparator" parent="HSplit/LeftPanel"]
+
+[node name="ReadyButton" type="Button" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+text = "READY"
+custom_minimum_size = Vector2(0, 45)
+
+[node name="StartButton" type="Button" parent="HSplit/LeftPanel"]
+unique_name_in_owner = true
+text = "START MATCH"
+custom_minimum_size = Vector2(0, 45)
+
+[node name="ChatPanel" type="VBoxContainer" parent="HSplit"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+script = ExtResource("2_chat")
+
+[node name="MessageLog" type="RichTextLabel" parent="HSplit/ChatPanel"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="InputRow" type="HBoxContainer" parent="HSplit/ChatPanel"]
+
+[node name="InputField" type="LineEdit" parent="HSplit/ChatPanel/InputRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+placeholder_text = "Type a message..."
+custom_minimum_size = Vector2(0, 36)
+
+[node name="SendButton" type="Button" parent="HSplit/ChatPanel/InputRow"]
+unique_name_in_owner = true
+text = "Send"
+custom_minimum_size = Vector2(70, 36)

@@ -1,0 +1,17 @@
+{
+  "smg": { "name": "SMG", "cost": 250, "type": "weapon" },
+  "shotgun": { "name": "Shotgun", "cost": 400, "type": "weapon" },
+  "sniper_rifle": { "name": "Sniper Rifle", "cost": 600, "type": "weapon" },
+  "rocket_launcher": { "name": "Rocket Launcher", "cost": 800, "type": "weapon" },
+
+  "assault_rifle_upgrade_1": { "name": "AR Upgrade Lv2", "cost": 400, "type": "upgrade", "is_upgrade": true },
+  "assault_rifle_upgrade_2": { "name": "AR Upgrade Lv3", "cost": 900, "type": "upgrade", "is_upgrade": true },
+  "smg_upgrade_1": { "name": "SMG Upgrade Lv2", "cost": 350, "type": "upgrade", "is_upgrade": true },
+  "smg_upgrade_2": { "name": "SMG Upgrade Lv3", "cost": 750, "type": "upgrade", "is_upgrade": true },
+  "shotgun_upgrade_1": { "name": "Shotgun Upgrade Lv2", "cost": 450, "type": "upgrade", "is_upgrade": true },
+  "shotgun_upgrade_2": { "name": "Shotgun Upgrade Lv3", "cost": 950, "type": "upgrade", "is_upgrade": true },
+  "sniper_rifle_upgrade_1": { "name": "Sniper Upgrade Lv2", "cost": 600, "type": "upgrade", "is_upgrade": true },
+  "sniper_rifle_upgrade_2": { "name": "Sniper Upgrade Lv3", "cost": 1200, "type": "upgrade", "is_upgrade": true },
+  "pistol_upgrade_1": { "name": "Pistol Upgrade Lv2", "cost": 200, "type": "upgrade", "is_upgrade": true },
+  "pistol_upgrade_2": { "name": "Pistol Upgrade Lv3", "cost": 500, "type": "upgrade", "is_upgrade": true }
+}

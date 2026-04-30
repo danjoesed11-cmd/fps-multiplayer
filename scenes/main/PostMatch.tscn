@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/main/PostMatch.gd" id="1_pm"]
+
+[node name="PostMatch" type="CanvasLayer"]
+script = ExtResource("1_pm")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+color = Color(0, 0, 0, 0.8)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+theme_override_constants/separation = 20
+
+[node name="WinnerLabel" type="Label" parent="VBox"]
+unique_name_in_owner = true
+text = "MATCH OVER"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ContinueButton" type="Button" parent="VBox"]
+unique_name_in_owner = true
+text = "CONTINUE"
+custom_minimum_size = Vector2(200, 50)

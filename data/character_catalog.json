@@ -1,0 +1,21 @@
+{
+  "body_default": { "name": "Default Body", "slot": "body", "cost": 0 },
+  "body_camo": { "name": "Camo Suit", "slot": "body", "cost": 500 },
+  "body_tactical": { "name": "Tactical Armor", "slot": "body", "cost": 800 },
+  "body_ninja": { "name": "Ninja Suit", "slot": "body", "cost": 1200 },
+
+  "head_default": { "name": "Default Head", "slot": "head", "cost": 0 },
+  "head_helmet_01": { "name": "Combat Helmet", "slot": "head", "cost": 300 },
+  "head_balaclava": { "name": "Balaclava", "slot": "head", "cost": 400 },
+  "head_cap": { "name": "Baseball Cap", "slot": "head", "cost": 150 },
+
+  "gloves_default": { "name": "Default Gloves", "slot": "gloves", "cost": 0 },
+  "gloves_tactical": { "name": "Tactical Gloves", "slot": "gloves", "cost": 200 },
+
+  "boots_default": { "name": "Default Boots", "slot": "boots", "cost": 0 },
+  "boots_tactical": { "name": "Tactical Boots", "slot": "boots", "cost": 250 },
+
+  "fx_default": { "name": "Default Kill FX", "slot": "kill_fx", "cost": 0 },
+  "fx_fire": { "name": "Fire Burst", "slot": "kill_fx", "cost": 600 },
+  "fx_confetti": { "name": "Confetti Pop", "slot": "kill_fx", "cost": 400 }
+}

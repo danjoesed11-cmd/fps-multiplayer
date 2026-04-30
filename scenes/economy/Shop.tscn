@@ -1,0 +1,62 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/economy/Shop.gd" id="1_shop"]
+
+[node name="Shop" type="CanvasLayer"]
+script = ExtResource("1_shop")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+color = Color(0, 0, 0, 0.75)
+mouse_filter = 0
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer"]
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="PanelContainer/VBox"]
+[node name="Title" type="Label" parent="PanelContainer/VBox/Header"]
+text = "SHOP"
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+
+[node name="CoinLabel" type="Label" parent="PanelContainer/VBox/Header"]
+unique_name_in_owner = true
+text = "$0"
+theme_override_font_sizes/font_size = 22
+modulate = Color(1, 0.85, 0.1, 1)
+
+[node name="CloseButton" type="Button" parent="PanelContainer/VBox/Header"]
+unique_name_in_owner = true
+text = "X"
+custom_minimum_size = Vector2(36, 36)
+
+[node name="TabContainer" type="TabContainer" parent="PanelContainer/VBox"]
+size_flags_vertical = 3
+
+[node name="Weapons" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer"]
+[node name="WeaponGrid" type="GridContainer" parent="PanelContainer/VBox/TabContainer/Weapons"]
+unique_name_in_owner = true
+columns = 3
+size_flags_horizontal = 3
+
+[node name="Upgrades" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer"]
+[node name="UpgradePanel" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Upgrades"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox"]
+unique_name_in_owner = true
+text = ""
+horizontal_alignment = 1
+modulate = Color(0.4, 1, 0.4, 1)

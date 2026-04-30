@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPS Multiplayer — Godot 4 Game</title>
+  <style>
+    :root {
+      --bg: #0a0b0f;
+      --surface: #12141a;
+      --surface2: #1c1f29;
+      --accent: #e8522a;
+      --accent2: #f0a040;
+      --text: #e4e6f0;
+      --muted: #7a7f95;
+      --border: #2a2d3a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(10, 11, 15, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+    }
+    .nav-logo {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,82,42,0.18) 0%, transparent 70%),
+        var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.03) 40px);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 99px;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.8rem, 8vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+    }
+    .btn-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.8rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #d44520; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--muted); transform: translateY(-1px); }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .scroll-hint::after {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+      animation: scrollPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%,100% { opacity: 0.3; } 50% { opacity: 1; }
+    }
+
+    /* ── Sections ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin-bottom: 3rem;
+    }
+
+    /* ── Mode cards ── */
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+    .mode-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .mode-card:hover::before { transform: scaleX(1); }
+    .mode-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .mode-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .mode-card p { color: var(--muted); font-size: 0.9rem; }
+
+    /* ── Features two-col ── */
+    .features-section { background: var(--surface); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 680px) { .features-grid { grid-template-columns: 1fr; } }
+    .feature-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .feature-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .feature-text h4 {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .feature-text p { color: var(--muted); font-size: 0.88rem; }
+
+    /* ── Weapons table ── */
+    .weapons-section { background: var(--bg); }
+    .weapons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .weapon-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .weapon-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .weapon-cost {
+      display: inline-block;
+      color: var(--accent2);
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .weapon-stats { display: flex; flex-direction: column; gap: 0.4rem; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+    .stat-label { color: var(--muted); }
+    .stat-bar-wrap {
+      flex: 1;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin: 0 0.75rem;
+      overflow: hidden;
+    }
+    .stat-bar { height: 100%; background: var(--accent); border-radius: 2px; }
+
+    /* ── Architecture ── */
+    .arch-section { background: var(--surface); }
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      line-height: 1.7;
+      color: #b0b8d0;
+    }
+    .code-block .kw { color: #e8522a; }
+    .code-block .fn { color: #f0a040; }
+    .code-block .str { color: #7ec87e; }
+    .code-block .cm { color: #4a5068; }
+
+    /* ── CTA ── */
+    .cta-section {
+      background:
+        radial-gradient(ellipse 70% 80% at 50% 50%, rgba(232,82,42,0.12) 0%, transparent 70%),
+        var(--bg);
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+    .cta-section p { color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── Responsive nav ── */
+    @media (max-width: 600px) {
+      nav ul { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">FPS Multiplayer</div>
+  <ul>
+    <li><a href="#modes">Modes</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#weapons">Weapons</a></li>
+    <li><a href="#code">Code</a></li>
+    <li><a href="https://github.com/danjoesed11/fps-multiplayer" target="_blank">GitHub</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Open Source &bull; Godot 4 &bull; Multiplayer</div>
+  <h1>A 3D <span>FPS</span><br>Built to Scale</h1>
+  <p>
+    Six game modes, six weapons with upgrade paths, real-time multiplayer, chat lobbies,
+    and character customization — all in Godot 4.
+  </p>
+  <div class="btn-row">
+    <a class="btn btn-primary" href="https://github.com/danjoesed11/fps-multiplayer" target="_blank">
+      View on GitHub
+    </a>
+    <a class="btn btn-outline" href="#modes">See Game Modes</a>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</section>
+
+<!-- Game Modes -->
+<section id="modes">
+  <div class="container">
+    <div class="section-label">Gameplay</div>
+    <h2 class="section-title">Six Game Modes</h2>
+    <p class="section-sub">From classic team battles to asymmetric hide-and-seek — every session plays differently.</p>
+    <div class="modes-grid">
+      <div class="mode-card">
+        <span class="mode-icon">⚔️</span>
+        <h3>Team Deathmatch</h3>
+        <p>Two teams fight for the kill lead. First to 30 eliminations wins the match.</p>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon">🚩</span>
+        <h3>Capture the Flag</h3>
+        <p>Steal the enemy flag and return it to your base. First team to 3 captures wins.</p>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon">🏆</span>
+        <h3>Zone Wars</h3>
+        <p>Control capture zones to bleed points from your opponents. Hold more zones, win faster.</p>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon">🫥</span>
+        <h3>Hide &amp; Seek / Prop Hunt</h3>
+        <p>Hiders blend into the map. Seekers hunt them down before the clock runs out.</p>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon">💀</span>
+        <h3>Team Wipeout</h3>
+        <p>Round-based elimination. No respawns per round — win 3 rounds to take the match.</p>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon">🤖</span>
+        <h3>Singleplayer</h3>
+        <p>Fight against AI bots across all maps. Full economy and upgrades available.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="features-section">
+  <div class="container">
+    <div class="section-label">Systems</div>
+    <h2 class="section-title">Everything Connected</h2>
+    <p class="section-sub">Each system is built to work together — economy feeds weapons, kills feed economy, modes feed the lobby.</p>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-text">
+          <h4>Real-Time Multiplayer</h4>
+          <p>ENet-powered networking with server-authoritative hit validation, MultiplayerSynchronizer for movement, and reliable RPCs for game events.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">💰</div>
+        <div class="feature-text">
+          <h4>Economy &amp; Shop</h4>
+          <p>Earn coins per kill and objective. Visit buy zones to purchase new weapons or upgrade existing ones across three tiers.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">💬</div>
+        <div class="feature-text">
+          <h4>Lobby Chat</h4>
+          <p>Full server-relayed text chat in the lobby with channel support. Ready-up system and mode/map voting before each match.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-text">
+          <h4>Character Customization</h4>
+          <p>Equip cosmetic skins for body, head, gloves, and boots. Kill effects unlock with coins. All changes replicate to every player.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-text">
+          <h4>Map System</h4>
+          <p>Maps define spawn points, objective markers, and buy zones. Game modes plug in as child nodes — swap modes without reloading maps.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📡</div>
+        <div class="feature-text">
+          <h4>Event Bus Architecture</h4>
+          <p>All cross-system signals route through a central EventBus singleton. HUD, economy, and modes stay fully decoupled.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Weapons -->
+<section id="weapons" class="weapons-section">
+  <div class="container">
+    <div class="section-label">Arsenal</div>
+    <h2 class="section-title">Six Weapons, Three Tiers Each</h2>
+    <p class="section-sub">Every weapon upgrades twice — spend your coins in the buy zone between rounds.</p>
+    <div class="weapons-grid">
+      <div class="weapon-card">
+        <h4>Pistol</h4>
+        <span class="weapon-cost">FREE — Starter</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:35%"></div></div>
+            <span>20</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:40%"></div></div>
+            <span>Med</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Range</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:30%"></div></div>
+            <span>80m</span>
+          </div>
+        </div>
+      </div>
+      <div class="weapon-card">
+        <h4>Assault Rifle</h4>
+        <span class="weapon-cost">FREE — Starter</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:45%"></div></div>
+            <span>22</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:75%"></div></div>
+            <span>High</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Range</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:60%"></div></div>
+            <span>150m</span>
+          </div>
+        </div>
+      </div>
+      <div class="weapon-card">
+        <h4>SMG</h4>
+        <span class="weapon-cost">$250</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:28%"></div></div>
+            <span>15</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:90%"></div></div>
+            <span>Max</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Range</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:25%"></div></div>
+            <span>80m</span>
+          </div>
+        </div>
+      </div>
+      <div class="weapon-card">
+        <h4>Shotgun</h4>
+        <span class="weapon-cost">$400</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:88%"></div></div>
+            <span>80×8</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:18%"></div></div>
+            <span>Low</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Range</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:12%"></div></div>
+            <span>30m</span>
+          </div>
+        </div>
+      </div>
+      <div class="weapon-card">
+        <h4>Sniper Rifle</h4>
+        <span class="weapon-cost">$600</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:95%"></div></div>
+            <span>90</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:10%"></div></div>
+            <span>Slow</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Range</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%"></div></div>
+            <span>400m</span>
+          </div>
+        </div>
+      </div>
+      <div class="weapon-card">
+        <h4>Rocket Launcher</h4>
+        <span class="weapon-cost">$800</span>
+        <div class="weapon-stats">
+          <div class="stat-row">
+            <span class="stat-label">Damage</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%"></div></div>
+            <span>120 AoE</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fire Rate</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:8%"></div></div>
+            <span>Slow</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Blast R.</span>
+            <div class="stat-bar-wrap"><div class="stat-bar" style="width:70%"></div></div>
+            <span>6m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Code Architecture -->
+<section id="code" class="arch-section">
+  <div class="container">
+    <div class="section-label">Code</div>
+    <h2 class="section-title">Clean GDScript Architecture</h2>
+    <p class="section-sub">Server-authoritative networking. Every coin, kill, and flag capture validated server-side.</p>
+    <div class="code-block"><pre><span class="cm"># EconomyManager.gd — server validates every purchase</span>
+<span class="kw">@rpc</span>(<span class="str">"any_peer"</span>, <span class="str">"call_local"</span>, <span class="str">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">request_purchase</span>(item_id: <span class="kw">String</span>) -> <span class="kw">void</span>:
+    <span class="kw">if not</span> multiplayer.is_server(): <span class="kw">return</span>
+    <span class="kw">var</span> sender_id := multiplayer.get_remote_sender_id()
+    _process_purchase(sender_id, item_id)
+
+<span class="cm"># WeaponBase.gd — client claims hit, server confirms</span>
+<span class="kw">@rpc</span>(<span class="str">"any_peer"</span>, <span class="str">"call_local"</span>, <span class="str">"reliable"</span>)
+<span class="kw">func</span> <span class="fn">rpc_claim_hit</span>(victim_id: <span class="kw">int</span>, hit_pos: <span class="kw">Vector3</span>) -> <span class="kw">void</span>:
+    <span class="kw">if not</span> multiplayer.is_server(): <span class="kw">return</span>
+    <span class="cm"># server raycasts to confirm line of sight</span>
+    victim.take_damage(final_damage, sender_id, weapon_id)
+
+<span class="cm"># EventBus.gd — all systems communicate via signals</span>
+<span class="kw">signal</span> <span class="fn">player_killed</span>(victim_id: <span class="kw">int</span>, killer_id: <span class="kw">int</span>, weapon_id: <span class="kw">String</span>)
+<span class="kw">signal</span> <span class="fn">coins_changed</span>(peer_id: <span class="kw">int</span>, new_total: <span class="kw">int</span>)
+<span class="kw">signal</span> <span class="fn">flag_captured</span>(capturing_team: <span class="kw">int</span>)</pre></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Clone &amp; Play</h2>
+    <p>Open in Godot 4.3+, hit Run, and you're in.</p>
+    <div class="code-block" style="max-width:500px;margin:0 auto 2rem;text-align:left;">
+      <pre>git clone https://github.com/danjoesed11/fps-multiplayer
+# Then open project.godot in Godot 4.3+</pre>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://github.com/danjoesed11/fps-multiplayer" target="_blank">
+        Star on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>
+    Built with <a href="https://godotengine.org" target="_blank">Godot 4</a> &bull;
+    <a href="https://github.com/danjoesed11/fps-multiplayer" target="_blank">Source on GitHub</a>
+  </p>
+</footer>
+
+</body>
+</html>

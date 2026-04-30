@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/smgs/SMG.gd" id="1_smg"]
+
+[node name="SMG" type="Node3D"]
+script = ExtResource("1_smg")
+
+[node name="MuzzlePoint" type="Marker3D" parent="."]
+position = Vector3(0, 0, -0.45)
+
+[node name="MuzzleFlash" type="GPUParticles3D" parent="."]
+position = Vector3(0, 0, -0.45)
+emitting = false
+one_shot = true
+amount = 6
+
+[node name="ReloadTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

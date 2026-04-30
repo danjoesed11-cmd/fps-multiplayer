@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[node name="MatchWorld" type="Node3D"]
+
+[node name="PlayersRoot" type="Node3D" parent="."]
+
+[node name="ProjectilesRoot" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
