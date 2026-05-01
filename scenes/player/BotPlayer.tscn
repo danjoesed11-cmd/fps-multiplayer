@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/player/BotPlayer.gd" id="1_bot"]
 [ext_resource type="Script" path="res://scenes/weapons/WeaponManager.gd" id="2_wm"]
@@ -6,6 +6,29 @@
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bot"]
 radius = 0.35
 height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.32
+height = 1.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(0.52, 0.52, 0.52)
+
+[sub_resource type="StandardMaterial3D" id="Mat_bot_body"]
+albedo_color = Color(1.0, 0.30, 0.20, 1)
+roughness = 0.4
+metallic = 0.2
+emission_enabled = true
+emission = Color(1.0, 0.20, 0.10, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_bot_head"]
+albedo_color = Color(1.0, 0.75, 0.10, 1)
+roughness = 0.3
+metallic = 0.3
+emission_enabled = true
+emission = Color(1.0, 0.65, 0.05, 1)
+emission_energy_multiplier = 0.5
 
 [node name="BotPlayer" type="CharacterBody3D"]
 script = ExtResource("1_bot")
@@ -16,6 +39,13 @@ shape = SubResource("CapsuleShape3D_bot")
 
 [node name="BotBody" type="MeshInstance3D" parent="."]
 position = Vector3(0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_body")
+surface_material_override/0 = SubResource("Mat_bot_body")
+
+[node name="BotHead" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.78, 0)
+mesh = SubResource("BoxMesh_head")
+surface_material_override/0 = SubResource("Mat_bot_head")
 
 [node name="CameraMount" type="Node3D" parent="."]
 position = Vector3(0, 1.65, 0)

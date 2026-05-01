@@ -8,6 +8,7 @@ func _ready() -> void:
 	mode_id = "singleplayer"
 	team_count = 2
 	score_limit = 20
+	_countdown_time = 1.0  # short countdown for singleplayer
 	super._ready()
 
 func _on_match_start() -> void:
@@ -22,8 +23,17 @@ func _spawn_bots() -> void:
 		bot.peer_id = -(i + 1)
 		bot.team_id = 1
 		GameManager.players_root.add_child(bot)
-		var spawn := get_spawn_position(bot.peer_id)
-		bot.global_position = spawn
+		# Use Team 1 spawn points directly (bots aren't in PlayerRegistry)
+		bot.global_position = _get_team_spawn(1)
+
+func _get_team_spawn(team_id: int) -> Vector3:
+	if not _map:
+		return Vector3(randf_range(-5, 5), 4, randf_range(-5, 5))
+	var spawn_node := _map.get_node_or_null("SpawnPoints_Team%d" % team_id)
+	if spawn_node and spawn_node.get_child_count() > 0:
+		var markers := spawn_node.get_children()
+		return markers[randi() % markers.size()].global_position + Vector3.UP
+	return Vector3(randf_range(-5, 5), 4, randf_range(-5, 5))
 
 func _on_player_killed(victim_id: int, killer_id: int, weapon_id: String) -> void:
 	super._on_player_killed(victim_id, killer_id, weapon_id)

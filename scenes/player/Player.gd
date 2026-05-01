@@ -4,7 +4,7 @@ extends CharacterBody3D
 const SPEED := 6.0
 const SPRINT_SPEED := 9.0
 const CROUCH_SPEED := 3.0
-const JUMP_VELOCITY := 5.5
+const JUMP_VELOCITY := 9.0
 const GRAVITY := -20.0
 const RESPAWN_INVINCIBLE_TIME := 2.0
 
