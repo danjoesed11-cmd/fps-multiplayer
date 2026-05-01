@@ -66,21 +66,21 @@ theme_override_font_sizes/font_size = 18
 [node name="AmmoBox" type="HBoxContainer" parent="BottomBar"]
 theme_override_constants/separation = 4
 
-[node name="AmmoCurrent" type="Label" parent="AmmoBox"]
+[node name="AmmoCurrent" type="Label" parent="BottomBar/AmmoBox"]
 unique_name_in_owner = true
 text = "30"
 theme_override_font_sizes/font_size = 22
 
-[node name="Slash" type="Label" parent="AmmoBox"]
+[node name="Slash" type="Label" parent="BottomBar/AmmoBox"]
 text = "/"
 
-[node name="AmmoReserve" type="Label" parent="AmmoBox"]
+[node name="AmmoReserve" type="Label" parent="BottomBar/AmmoBox"]
 unique_name_in_owner = true
 text = "90"
 theme_override_font_sizes/font_size = 16
 modulate = Color(0.7, 0.7, 0.7, 1)
 
-[node name="CoinDisplay" type="Label" parent="BottomBar"]
+[node name="CoinLabel" type="Label" parent="BottomBar"]
 unique_name_in_owner = true
 text = "$0"
 theme_override_font_sizes/font_size = 18
@@ -151,4 +151,21 @@ offset_left = -350.0
 offset_top = -250.0
 offset_right = 350.0
 offset_bottom = 250.0
+visible = false
+
+[node name="ClickToPlay" type="Label" parent="."]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 90.0
+text = "Click to capture mouse  •  Esc to release"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
 visible = false

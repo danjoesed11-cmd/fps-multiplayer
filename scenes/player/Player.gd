@@ -31,7 +31,7 @@ func _ready() -> void:
 	set_multiplayer_authority(peer_id)
 	if is_multiplayer_authority():
 		player_camera.current = true
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		_capture_mouse()
 	else:
 		player_camera.current = false
 
@@ -40,6 +40,9 @@ func _ready() -> void:
 		team_id = info.team_id
 
 	weapon_manager.initialize(peer_id, is_multiplayer_authority())
+
+func _capture_mouse() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _physics_process(delta: float) -> void:
 	if _invincible_timer > 0:
@@ -83,8 +86,27 @@ func _handle_jump() -> void:
 		velocity.y = JUMP_VELOCITY
 
 func _input(event: InputEvent) -> void:
-	if not is_multiplayer_authority() or not is_alive:
+	if not is_multiplayer_authority():
 		return
+
+	# Escape releases / re-captures the mouse
+	if event.is_action_pressed("ui_cancel"):
+		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		else:
+			_capture_mouse()
+		return
+
+	# Any click re-captures the mouse when it was released
+	if event is InputEventMouseButton and event.pressed:
+		if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
+			_capture_mouse()
+			return   # don't fire on the recapture click
+
+	if not is_alive:
+		return
+
+	# Mouse look — only when captured
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var sens := SettingsManager.get_sensitivity()
 		rotate_y(-event.relative.x * sens)

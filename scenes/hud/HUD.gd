@@ -14,6 +14,7 @@ extends CanvasLayer
 @onready var scoreboard: Control = %Scoreboard
 @onready var hit_indicator: Control = %HitIndicator
 @onready var low_health_overlay: Control = %LowHealthOverlay
+@onready var click_to_play: Label = %ClickToPlay
 
 const KILL_FEED_ENTRY_SCENE := "res://scenes/hud/KillFeedEntry.tscn"
 const MAX_KILL_FEED := 5
@@ -56,6 +57,10 @@ func _process(delta: float) -> void:
 		health_bar.value = hp_ratio * 100.0
 		health_label.text = str(int(player.health))
 		low_health_overlay.modulate.a = max(0.0, 0.4 - hp_ratio * 0.8)
+
+	# Show hint when mouse is not captured
+	var captured := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
+	click_to_play.visible = not captured
 
 	if Input.is_action_just_pressed("scoreboard"):
 		scoreboard.show()

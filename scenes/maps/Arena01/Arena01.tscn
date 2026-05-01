@@ -61,37 +61,37 @@ position = Vector3(34, 4, 34)
 
 [node name="Sun" type="DirectionalLight3D" parent="Lights"]
 rotation = Vector3(-0.8, 0.6, 0)
-light_color = Color(0.9, 0.85, 1.0)
+light_color = Color(0.9, 0.85, 1.0, 1)
 light_energy = 1.4
 shadow_enabled = true
 
 [node name="NeonBlue" type="OmniLight3D" parent="Lights"]
 position = Vector3(-28, 6, -28)
-light_color = Color(0.2, 0.5, 1.0)
+light_color = Color(0.2, 0.5, 1.0, 1)
 light_energy = 4.0
 omni_range = 25.0
 
 [node name="NeonOrange" type="OmniLight3D" parent="Lights"]
 position = Vector3(28, 6, 28)
-light_color = Color(1.0, 0.45, 0.1)
+light_color = Color(1.0, 0.45, 0.1, 1)
 light_energy = 4.0
 omni_range = 25.0
 
 [node name="NeonCentral" type="OmniLight3D" parent="Lights"]
 position = Vector3(0, 10, 0)
-light_color = Color(0.3, 1.0, 0.8)
+light_color = Color(0.3, 1.0, 0.8, 1)
 light_energy = 5.0
 omni_range = 30.0
 
 [node name="NeonPink" type="OmniLight3D" parent="Lights"]
 position = Vector3(0, 4, 35)
-light_color = Color(1.0, 0.2, 0.7)
+light_color = Color(1.0, 0.2, 0.7, 1)
 light_energy = 2.5
 omni_range = 20.0
 
 [node name="NeonGreen" type="OmniLight3D" parent="Lights"]
 position = Vector3(0, 4, -35)
-light_color = Color(0.3, 1.0, 0.4)
+light_color = Color(0.3, 1.0, 0.4, 1)
 light_energy = 2.5
 omni_range = 20.0
 
