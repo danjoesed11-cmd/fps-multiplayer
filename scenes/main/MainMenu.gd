@@ -51,24 +51,31 @@ func _style_button(btn: Button, normal_color: Color, hover_color: Color, font_co
 # ── Intro animation ────────────────────────────────────────
 
 func _animate_in() -> void:
-	panel.modulate   = Color(1, 1, 1, 0)
-	panel.position.y += 50
+	panel.modulate.a = 0.0
+	await get_tree().process_frame  # let CenterContainer finish layout
+	var natural_y := panel.position.y
+	panel.position.y = natural_y + 60
 	var tw := create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tw.tween_property(panel, "modulate:a", 1.0, 0.55)
-	tw.parallel().tween_property(panel, "position:y", 0.0, 0.55)
+	tw.parallel().tween_property(panel, "position:y", natural_y, 0.55)
 
 # ── Actions ────────────────────────────────────────────────
 
 func _on_play_ai() -> void:
 	_save_settings()
-	var err := NetworkManager.create_server(NetworkManager.PORT, 1)
-	if err == OK:
-		_register_self()
-		GameManager.start_match("singleplayer", "arena01")
-	else:
-		_show_status("Couldn't start game — try again!", Color(1, 0.4, 0.3))
+	# Use offline peer — no real server needed for singleplayer
+	var offline := OfflineMultiplayerPeer.new()
+	multiplayer.multiplayer_peer = offline
+	var display_name := name_input.text.strip_edges()
+	if display_name.is_empty():
+		display_name = "Player"
+	PlayerRegistry.request_register(display_name, SettingsManager.get_cosmetics())
+	GameManager.start_match_offline("singleplayer", "arena01")
 
 func _on_host() -> void:
+	if OS.has_feature("web"):
+		_show_status("Hosting not available in browser — use the desktop app to host", Color(1, 0.7, 0.2))
+		return
 	_save_settings()
 	var port := _get_port()
 	var err := NetworkManager.create_server(port)
@@ -76,7 +83,7 @@ func _on_host() -> void:
 		_register_self()
 		GameManager.transition_to_lobby()
 	else:
-		_show_status("Couldn't host — port may be in use", Color(1, 0.4, 0.3))
+		_show_status("Couldn't host — port %d may be in use" % port, Color(1, 0.4, 0.3))
 
 func _on_join() -> void:
 	_save_settings()

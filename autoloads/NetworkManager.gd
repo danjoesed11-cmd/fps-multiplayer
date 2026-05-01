@@ -19,43 +19,27 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 func create_server(port: int = PORT, max_players: int = MAX_PLAYERS) -> Error:
-	if OS.has_feature("web"):
-		var ws := WebSocketMultiplayerPeer.new()
-		var err := ws.create_server(port)
-		if err != OK:
-			push_error("Failed to create WS server: %s" % error_string(err))
-			return err
-		peer = ws
-	else:
-		var enet := ENetMultiplayerPeer.new()
-		var err := enet.create_server(port, max_players)
-		if err != OK:
-			push_error("Failed to create ENet server: %s" % error_string(err))
-			return err
-		peer = enet
-
+	# Always use WebSocket so web clients can join desktop servers
+	var ws := WebSocketMultiplayerPeer.new()
+	var err := ws.create_server(port)
+	if err != OK:
+		push_error("Failed to create WebSocket server: %s" % error_string(err))
+		return err
+	peer = ws
 	multiplayer.multiplayer_peer = peer
 	server_created.emit()
-	print("[Network] Server started on port %d" % port)
+	print("[Network] WebSocket server started on port %d" % port)
 	return OK
 
 func join_server(address: String, port: int = PORT) -> Error:
-	if OS.has_feature("web"):
-		var ws := WebSocketMultiplayerPeer.new()
-		var url := "ws://%s:%d" % [address, port]
-		var err := ws.create_client(url)
-		if err != OK:
-			push_error("Failed to connect via WS: %s" % error_string(err))
-			return err
-		peer = ws
-	else:
-		var enet := ENetMultiplayerPeer.new()
-		var err := enet.create_client(address, port)
-		if err != OK:
-			push_error("Failed to connect via ENet: %s" % error_string(err))
-			return err
-		peer = enet
-
+	# Always use WebSocket — compatible with both desktop and web clients
+	var ws := WebSocketMultiplayerPeer.new()
+	var url := "ws://%s:%d" % [address, port]
+	var err := ws.create_client(url)
+	if err != OK:
+		push_error("Failed to connect via WebSocket: %s" % error_string(err))
+		return err
+	peer = ws
 	multiplayer.multiplayer_peer = peer
 	print("[Network] Connecting to %s:%d" % [address, port])
 	return OK

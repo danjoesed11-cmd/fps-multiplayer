@@ -12,11 +12,9 @@ enum MatchState { WAITING, COUNTDOWN, ACTIVE, POST_ROUND, MATCH_OVER }
 @export var coins_per_round_win: int = 150
 @export var respawn_delay: float = 3.0
 
-var match_state: MatchState = MatchState.WAITING:
-	set(v):
-		match_state = v
-		_on_state_changed(v)
-		_sync_state.rpc(v)
+# Plain var — no setter to avoid rpc → setter → rpc infinite recursion.
+# Use _set_state() to change state; _sync_state.rpc() propagates to clients.
+var match_state: MatchState = MatchState.WAITING
 
 var team_scores: Array[int] = []
 var _map: Node = null
@@ -34,9 +32,9 @@ func initialize(map: Node) -> void:
 	PlayerRegistry.assign_teams(team_count)
 
 func begin_match() -> void:
-	match_state = MatchState.COUNTDOWN
+	_set_state(MatchState.COUNTDOWN)
 	await get_tree().create_timer(_countdown_time).timeout
-	match_state = MatchState.ACTIVE
+	_set_state(MatchState.ACTIVE)
 	_on_match_start()
 
 func _process(delta: float) -> void:
@@ -58,6 +56,13 @@ func _get_leading_team() -> int:
 			best_score = team_scores[i]
 			best_team = i
 	return best_team
+
+# Server calls this to change state — sets locally then replicates to clients.
+func _set_state(new_state: MatchState) -> void:
+	match_state = new_state
+	_on_state_changed(new_state)
+	EventBus.match_state_changed.emit(new_state)
+	_sync_state.rpc(new_state)  # no call_local → only clients receive this
 
 func _add_score(team_id: int, amount: int) -> void:
 	if team_id < 0 or team_id >= team_count:
@@ -91,9 +96,11 @@ func _setup_objectives() -> void: pass
 func _check_win_condition() -> void: pass
 func _on_state_changed(_state: MatchState) -> void: pass
 
-@rpc("authority", "call_local", "reliable")
+# Clients-only: server state is set directly in _set_state()
+@rpc("authority", "reliable")
 func _sync_state(state: int) -> void:
 	match_state = state as MatchState
+	_on_state_changed(state)
 	EventBus.match_state_changed.emit(state)
 
 @rpc("authority", "call_local", "reliable")

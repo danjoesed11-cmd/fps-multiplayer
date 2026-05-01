@@ -58,6 +58,12 @@ func start_match(mode_id: String, map_id: String) -> void:
 	selected_map = map_id
 	_begin_loading.rpc(mode_id, map_id)
 
+# Singleplayer / offline: bypass RPC, call directly
+func start_match_offline(mode_id: String, map_id: String) -> void:
+	selected_mode = mode_id
+	selected_map = map_id
+	_begin_loading(mode_id, map_id)
+
 @rpc("authority", "call_local", "reliable")
 func _begin_loading(mode_id: String, map_id: String) -> void:
 	app_state = AppState.LOADING
@@ -67,6 +73,11 @@ func _begin_loading(mode_id: String, map_id: String) -> void:
 	_load_match_scene(mode_id, map_id)
 
 func _load_match_scene(mode_id: String, map_id: String) -> void:
+	# Free loading screen before adding 3D world
+	var loading_screen := get_tree().current_scene
+	if loading_screen:
+		loading_screen.queue_free()
+
 	var match_scene := preload("res://scenes/main/MatchWorld.tscn").instantiate()
 	get_tree().root.add_child(match_scene)
 	world_root = match_scene
