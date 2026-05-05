@@ -7,27 +7,33 @@ extends Control
 @onready var ip_input: LineEdit      = %IPInput
 @onready var port_input: LineEdit    = %PortInput
 @onready var status_label: Label     = %StatusLabel
-@onready var play_ai_button: Button  = %PlayAIButton
+@onready var tdm_ai_button: Button   = %TDMAIButton
+@onready var survival_button: Button = %SurvivalButton
+@onready var zone_ai_button: Button  = %ZoneAIButton
 @onready var quit_button: Button     = %QuitButton
 @onready var panel: PanelContainer   = $CenterContainer/Panel
 
 func _ready() -> void:
-	play_ai_button.pressed.connect(_on_play_ai)
+	tdm_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
+	survival_button.pressed.connect(func(): _start_ai("singleplayer"))
+	zone_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
 	host_button.pressed.connect(_on_host)
 	join_button.pressed.connect(_on_join)
 	quit_button.pressed.connect(get_tree().quit)
 
 	name_input.text = SettingsManager.get_setting("display_name", "Player")
-	ip_input.text   = SettingsManager.get_setting("last_ip", "127.0.0.1")
+	ip_input.text   = SettingsManager.get_setting("last_ip", "")
 	port_input.text = str(NetworkManager.PORT)
 	status_label.text = ""
 
-	_style_button(play_ai_button,
-		Color(1.0, 0.75, 0.0), Color(0.75, 0.35, 0.0), Color(0.08, 0.04, 0.0))
-	_style_button(host_button,
-		Color(0.18, 0.82, 0.45), Color(0.22, 0.95, 0.55), Color(1, 1, 1))
-	_style_button(join_button,
-		Color(0.2, 0.55, 1.0), Color(0.3, 0.65, 1.0), Color(1, 1, 1))
+	_style_button(tdm_ai_button,   Color(1.0, 0.45, 0.0), Color(1.0, 0.6, 0.1), Color(1, 1, 1))
+	_style_button(survival_button, Color(0.7, 0.2, 0.8),  Color(0.85, 0.3, 1.0), Color(1, 1, 1))
+	_style_button(zone_ai_button,  Color(0.1, 0.6, 0.9),  Color(0.2, 0.75, 1.0), Color(1, 1, 1))
+	_style_button(host_button,     Color(0.18, 0.82, 0.45), Color(0.22, 0.95, 0.55), Color(1, 1, 1))
+	_style_button(join_button,     Color(0.2, 0.55, 1.0),   Color(0.3, 0.65, 1.0),   Color(1, 1, 1))
+
+	if OS.has_feature("web"):
+		host_button.hide()
 
 	_animate_in()
 
@@ -36,9 +42,9 @@ func _ready() -> void:
 func _style_button(btn: Button, normal_color: Color, hover_color: Color, font_color: Color) -> void:
 	for state in [["normal", normal_color], ["hover", hover_color], ["pressed", normal_color.darkened(0.1)]]:
 		var sb := StyleBoxFlat.new()
-		sb.bg_color       = state[1]
-		sb.corner_radius_top_left    = 12
-		sb.corner_radius_top_right   = 12
+		sb.bg_color                   = state[1]
+		sb.corner_radius_top_left     = 12
+		sb.corner_radius_top_right    = 12
 		sb.corner_radius_bottom_right = 12
 		sb.corner_radius_bottom_left  = 12
 		sb.content_margin_left  = 14
@@ -52,42 +58,41 @@ func _style_button(btn: Button, normal_color: Color, hover_color: Color, font_co
 
 func _animate_in() -> void:
 	panel.modulate.a = 0.0
-	await get_tree().process_frame  # let CenterContainer finish layout
+	await get_tree().process_frame
 	var natural_y := panel.position.y
 	panel.position.y = natural_y + 60
 	var tw := create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tw.tween_property(panel, "modulate:a", 1.0, 0.55)
 	tw.parallel().tween_property(panel, "position:y", natural_y, 0.55)
 
-# ── Actions ────────────────────────────────────────────────
+# ── AI modes ───────────────────────────────────────────────
 
-func _on_play_ai() -> void:
+func _start_ai(mode_id: String) -> void:
 	_save_settings()
-	# Use offline peer — no real server needed for singleplayer
 	var offline := OfflineMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = offline
-	var display_name := name_input.text.strip_edges()
-	if display_name.is_empty():
-		display_name = "Player"
-	PlayerRegistry.request_register(display_name, SettingsManager.get_cosmetics())
-	GameManager.start_match_offline("singleplayer", "arena01")
+	PlayerRegistry.request_register(_get_display_name(), SettingsManager.get_cosmetics())
+	GameManager.start_match_offline(mode_id, "arena01")
+
+# ── LAN host / join ────────────────────────────────────────
 
 func _on_host() -> void:
-	if OS.has_feature("web"):
-		_show_status("Hosting not available in browser — use the desktop app to host", Color(1, 0.7, 0.2))
-		return
 	_save_settings()
 	var port := _get_port()
 	var err := NetworkManager.create_server(port)
 	if err == OK:
 		_register_self()
+		_show_status("Hosting on port %d — share your local IP with friends" % port, Color(0.3, 1.0, 0.5))
 		GameManager.transition_to_lobby()
 	else:
 		_show_status("Couldn't host — port %d may be in use" % port, Color(1, 0.4, 0.3))
 
 func _on_join() -> void:
+	var ip := ip_input.text.strip_edges()
+	if ip.is_empty():
+		_show_status("Enter the host's local IP address", Color(1, 0.7, 0.3))
+		return
 	_save_settings()
-	var ip   := ip_input.text.strip_edges()
 	var port := _get_port()
 	_show_status("Connecting to %s:%d..." % [ip, port], Color(0.4, 0.9, 1.0))
 	NetworkManager.join_server(ip, port)
@@ -99,20 +104,20 @@ func _on_connected(_id: int) -> void:
 	GameManager.transition_to_lobby()
 
 func _on_failed() -> void:
-	_show_status("Connection failed — check the IP address", Color(1, 0.4, 0.3))
+	_show_status("Connection failed — check the IP and make sure host is running", Color(1, 0.4, 0.3))
+
+# ── Helpers ────────────────────────────────────────────────
 
 func _show_status(msg: String, color: Color) -> void:
-	status_label.text    = msg
+	status_label.text     = msg
 	status_label.modulate = color
-	var tw := create_tween()
-	tw.tween_interval(4.0)
-	tw.tween_callback(func(): status_label.text = "")
 
 func _register_self() -> void:
-	var display_name := name_input.text.strip_edges()
-	if display_name.is_empty():
-		display_name = "Player"
-	PlayerRegistry.request_register.rpc_id(1, display_name, SettingsManager.get_cosmetics())
+	PlayerRegistry.request_register.rpc_id(1, _get_display_name(), SettingsManager.get_cosmetics())
+
+func _get_display_name() -> String:
+	var n := name_input.text.strip_edges()
+	return n if not n.is_empty() else "Player"
 
 func _get_port() -> int:
 	return int(port_input.text) if port_input.text.is_valid_int() else NetworkManager.PORT

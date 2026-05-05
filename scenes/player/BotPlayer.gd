@@ -2,8 +2,9 @@ class_name BotPlayer
 extends Player
 
 const THINK_INTERVAL := 0.3
-const ATTACK_RANGE := 25.0
-const WANDER_RANGE := 15.0
+const ATTACK_RANGE := 20.0
+const WANDER_RANGE := 12.0
+const BOT_SPEED := 2.8
 
 var _target: Player = null
 var _think_timer: float = 0.0
@@ -11,12 +12,14 @@ var _wander_target: Vector3 = Vector3.ZERO
 var _nav_agent: NavigationAgent3D = null
 
 func _ready() -> void:
-	# Bots are always authoritative on the server
+	name = str(peer_id)  # must match str(peer_id) so GameManager.get_player_node() finds us
 	set_multiplayer_authority(1)
 	player_camera.current = false
 	if has_node("NavigationAgent3D"):
 		_nav_agent = $NavigationAgent3D
-	_wander_target = global_position + Vector3(randf_range(-WANDER_RANGE, WANDER_RANGE), 0, randf_range(-WANDER_RANGE, WANDER_RANGE))
+	_wander_target = global_position + Vector3(
+		randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
+		randf_range(-WANDER_RANGE, WANDER_RANGE))
 	weapon_manager.initialize(peer_id, true)
 
 func _physics_process(delta: float) -> void:
@@ -60,12 +63,14 @@ func _move_towards_goal(delta: float) -> void:
 	else:
 		goal = _wander_target
 		if global_position.distance_to(goal) < 2.0:
-			_wander_target = global_position + Vector3(randf_range(-WANDER_RANGE, WANDER_RANGE), 0, randf_range(-WANDER_RANGE, WANDER_RANGE))
+			_wander_target = global_position + Vector3(
+				randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
+				randf_range(-WANDER_RANGE, WANDER_RANGE))
 
 	var direction := (goal - global_position).normalized()
 	direction.y = 0
-	velocity.x = direction.x * SPEED
-	velocity.z = direction.z * SPEED
+	velocity.x = direction.x * BOT_SPEED
+	velocity.z = direction.z * BOT_SPEED
 
 	if direction.length() > 0.1:
 		var look_dir := Transform3D().looking_at(direction, Vector3.UP)

@@ -17,7 +17,6 @@ func initialize(owner_id: int, is_local: bool) -> void:
 	_is_local = is_local
 	_load_catalog()
 
-	# Find weapon holder in the tree
 	var player := get_parent()
 	var cam_mount := player.get_node_or_null("CameraMount")
 	if cam_mount:
@@ -40,7 +39,8 @@ func _equip_starter_weapons() -> void:
 	for weapon_id in _catalog:
 		var data: Dictionary = _catalog[weapon_id]
 		if data.get("is_starter", false):
-			_give_weapon(weapon_id, 0)
+			var slot: int = data.get("slot", 0)
+			_give_weapon(weapon_id, slot)
 	_switch_to_slot(0)
 
 func _give_weapon(weapon_id: String, slot: int) -> void:
@@ -58,6 +58,22 @@ func _give_weapon(weapon_id: String, slot: int) -> void:
 
 	var scene := load(scene_path) as PackedScene
 	var weapon := scene.instantiate() as WeaponBase
+
+	# Build WeaponData from catalog JSON so all stats are properly populated
+	var wd := WeaponData.new()
+	wd.weapon_id = weapon_id
+	wd.display_name = data.get("name", weapon_id)
+	wd.is_hitscan = data.get("is_hitscan", true)
+	wd.is_starter = data.get("is_starter", false)
+	wd.purchase_cost = data.get("cost", 0)
+	_fill_float_array(wd.damage_per_tier, data.get("damage", [25.0, 30.0, 35.0]))
+	_fill_float_array(wd.fire_rate_per_tier, data.get("fire_rate", [0.12, 0.10, 0.08]))
+	_fill_int_array(wd.magazine_per_tier, data.get("magazine", [30, 35, 40]))
+	_fill_int_array(wd.reserve_per_tier, data.get("reserve", [90, 105, 120]))
+	_fill_float_array(wd.range_per_tier, data.get("range", [150.0, 175.0, 200.0]))
+	_fill_float_array(wd.spread_per_tier, data.get("spread", [0.01, 0.008, 0.005]))
+	weapon.weapon_data = wd
+
 	weapon.setup(_owner_id, _is_local)
 
 	if _weapon_holder:
@@ -69,6 +85,16 @@ func _give_weapon(weapon_id: String, slot: int) -> void:
 	if weapon_id not in _owned_weapon_ids:
 		_owned_weapon_ids.append(weapon_id)
 	weapon.hide()
+
+func _fill_float_array(target: Array[float], source: Array) -> void:
+	target.clear()
+	for v in source:
+		target.append(float(v))
+
+func _fill_int_array(target: Array[int], source: Array) -> void:
+	target.clear()
+	for v in source:
+		target.append(int(v))
 
 func _switch_to_slot(slot: int) -> void:
 	if slot < 0 or slot >= MAX_SLOTS:

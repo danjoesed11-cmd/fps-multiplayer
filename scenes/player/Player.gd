@@ -114,7 +114,7 @@ func _input(event: InputEvent) -> void:
 		camera_mount.rotation.x = _camera_pitch
 
 func take_damage(amount: float, attacker_id: int, weapon_id: String) -> void:
-	if not multiplayer.is_server():
+	if not multiplayer.is_server() and multiplayer.get_unique_id() != 1:
 		return
 	if not is_alive or _invincible_timer > 0:
 		return

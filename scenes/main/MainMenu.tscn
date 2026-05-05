@@ -71,7 +71,7 @@ mouse_filter = 2
 anchors_preset = 15
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(420, 0)
+custom_minimum_size = Vector2(440, 0)
 theme_override_styles/panel = SubResource("StyleBox_glass")
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
@@ -105,18 +105,45 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.4)
 
-[node name="PlayAIButton" type="Button" parent="CenterContainer/Panel/VBox"]
-unique_name_in_owner = true
-text = "🤖  PLAY vs AI"
-custom_minimum_size = Vector2(0, 52)
-theme_override_font_sizes/font_size = 19
-theme_override_colors/font_color = Color(0.08, 0.04, 0.0, 1)
+[node name="AIDivider" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 8
 
-[node name="AISubLabel" type="Label" parent="CenterContainer/Panel/VBox"]
-text = "Solo against bots • No friends needed!"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 11
-theme_override_colors/font_color = Color(1, 1, 1, 0.4)
+[node name="AIDivLine1" type="HSeparator" parent="CenterContainer/Panel/VBox/AIDivider"]
+size_flags_horizontal = 3
+modulate = Color(1, 1, 1, 0.18)
+
+[node name="AIDivLabel" type="Label" parent="CenterContainer/Panel/VBox/AIDivider"]
+text = "PLAY vs AI"
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 0.85, 0.0, 0.7)
+vertical_alignment = 1
+
+[node name="AIDivLine2" type="HSeparator" parent="CenterContainer/Panel/VBox/AIDivider"]
+size_flags_horizontal = 3
+modulate = Color(1, 1, 1, 0.18)
+
+[node name="AIRow1" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
+theme_override_constants/separation = 8
+
+[node name="TDMAIButton" type="Button" parent="CenterContainer/Panel/VBox/AIRow1"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "⚔️  Team Deathmatch"
+custom_minimum_size = Vector2(0, 46)
+theme_override_font_sizes/font_size = 14
+
+[node name="SurvivalButton" type="Button" parent="CenterContainer/Panel/VBox/AIRow1"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "🛡️  Survival"
+custom_minimum_size = Vector2(0, 46)
+theme_override_font_sizes/font_size = 14
+
+[node name="ZoneAIButton" type="Button" parent="CenterContainer/Panel/VBox"]
+unique_name_in_owner = true
+text = "🏆  Zone Wars vs Bots"
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 14
 
 [node name="Divider" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
 theme_override_constants/separation = 8
@@ -126,7 +153,7 @@ size_flags_horizontal = 3
 modulate = Color(1, 1, 1, 0.18)
 
 [node name="DivLabel" type="Label" parent="CenterContainer/Panel/VBox/Divider"]
-text = "MULTIPLAYER"
+text = "LAN MULTIPLAYER"
 theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 1, 1, 0.35)
 vertical_alignment = 1
@@ -141,16 +168,16 @@ theme_override_constants/separation = 8
 [node name="IPInput" type="LineEdit" parent="CenterContainer/Panel/VBox/IPRow"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
-text = "127.0.0.1"
-placeholder_text = "IP address"
+placeholder_text = "Host's local IP  e.g. 192.168.1.5"
 custom_minimum_size = Vector2(0, 40)
 theme_override_styles/normal = SubResource("StyleBox_input")
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.4)
 
 [node name="PortInput" type="LineEdit" parent="CenterContainer/Panel/VBox/IPRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 40)
+custom_minimum_size = Vector2(72, 40)
 text = "7777"
 placeholder_text = "Port"
 theme_override_styles/normal = SubResource("StyleBox_input")
