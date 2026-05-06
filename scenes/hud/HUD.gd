@@ -135,4 +135,21 @@ func _on_score_changed(_team_id: int, _score: int) -> void:
 			team1_score.text = str(scores[1])
 
 func _on_match_state_changed(state: int) -> void:
-	pass
+	if state == 4:  # MatchState.MATCH_OVER
+		_show_match_over_banner()
+
+func _show_match_over_banner() -> void:
+	var lbl := Label.new()
+	lbl.text = "MATCH OVER"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	lbl.position.y = 80
+	lbl.add_theme_font_size_override("font_size", 48)
+	lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.1))
+	add_child(lbl)
+	# Fade out after 4 s
+	var tw := create_tween()
+	tw.tween_interval(3.0)
+	tw.tween_property(lbl, "modulate:a", 0.0, 1.0)
+	tw.tween_callback(lbl.queue_free)

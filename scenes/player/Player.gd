@@ -128,6 +128,14 @@ func _input(event: InputEvent) -> void:
 	if not is_alive:
 		return
 
+	# V key cycles camera perspective (FPS → TPS → Far → FPS)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_V:
+		var modes := ["fps", "tps", "far"]
+		var cur: String = SettingsManager.get_setting("camera_mode", "fps")
+		var idx := modes.find(cur)
+		var next: String = modes[(idx + 1) % modes.size()]
+		SettingsManager.set_setting("camera_mode", next)
+
 	# Mouse look — only when captured
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var sens := SettingsManager.get_sensitivity()

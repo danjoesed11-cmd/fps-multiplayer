@@ -152,9 +152,9 @@ func end_match(winner_team: int) -> void:
 	app_state = AppState.POST_MATCH
 	EventBus.match_over.emit(winner_team)
 	_show_post_match.rpc(winner_team)
-	await get_tree().create_timer(10.0).timeout
+	await get_tree().create_timer(8.0).timeout
 	_cleanup_match()
-	_return_all_to_lobby.rpc()
+	return_to_main_menu()
 
 @rpc("authority", "call_local", "reliable")
 func _show_post_match(winner_team: int) -> void:

@@ -1,15 +1,15 @@
 class_name BotPlayer
 extends Player
 
-const THINK_INTERVAL   := 0.25
-const ATTACK_RANGE     := 18.0
-const WANDER_RANGE     := 12.0
-const BOT_SPEED        := 3.0
+const THINK_INTERVAL        := 0.10
+const ATTACK_RANGE          := 45.0
+const WANDER_RANGE          := 16.0
+const BOT_SPEED             := 5.5
 
-const ENEMY_FIRE_INTERVAL   := 0.9    # extra delay between shots for enemy bots
-const FRIENDLY_FIRE_INTERVAL := 0.4
-const ENEMY_DAMAGE_MULT     := 0.42   # enemy bots deal 42% of normal weapon damage
-const HIT_IMMUNITY_SECS     := 0.15   # seconds enemy bots are immune after being hit
+const ENEMY_FIRE_INTERVAL   := 0.35
+const FRIENDLY_FIRE_INTERVAL := 0.20
+const ENEMY_DAMAGE_MULT     := 0.70
+const HIT_IMMUNITY_SECS     := 0.08
 
 var _target: Player = null
 var _think_timer: float = 0.0
@@ -22,6 +22,7 @@ var _strafe_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
 var _stuck_timer: float = 0.0
 var _hit_immunity_timer: float = 0.0
+var _jump_timer: float = 0.0
 
 @onready var bot_body: MeshInstance3D = $BotBody
 @onready var bot_head: MeshInstance3D = $BotHead
@@ -38,7 +39,6 @@ func _ready() -> void:
 	weapon_manager.initialize(peer_id, true)
 	_apply_team_colors()
 	if team_id == 1:
-		# Nerf enemy bot damage after weapon manager sets up
 		await get_tree().process_frame
 		var wm: WeaponBase = weapon_manager.get_current_weapon()
 		if wm:
@@ -48,11 +48,11 @@ func _apply_team_colors() -> void:
 	var body_col: Color
 	var head_col: Color
 	if team_id == 0:
-		body_col = Color(0.05, 0.25, 0.75, 1)  # dark blue
-		head_col = Color(0.35, 0.75, 1.0, 1)   # light blue
+		body_col = Color(0.05, 0.25, 0.75, 1)
+		head_col = Color(0.35, 0.75, 1.0, 1)
 	else:
-		body_col = Color(0.85, 0.12, 0.05, 1)  # red
-		head_col = Color(1.0, 0.42, 0.0, 1)    # orange
+		body_col = Color(0.85, 0.12, 0.05, 1)
+		head_col = Color(1.0, 0.42, 0.0, 1)
 	_tint_mesh(bot_body, body_col, 0.5)
 	_tint_mesh(bot_head, head_col, 0.6)
 
@@ -68,7 +68,7 @@ func _tint_mesh(mesh: MeshInstance3D, color: Color, emission: float) -> void:
 
 func take_damage(amount: float, attacker_id: int, weapon_id: String) -> void:
 	if team_id == 1 and _hit_immunity_timer > 0:
-		return  # enemy bot is briefly immune after last hit
+		return
 	super.take_damage(amount, attacker_id, weapon_id)
 	if team_id == 1 and is_alive:
 		_hit_immunity_timer = HIT_IMMUNITY_SECS
@@ -77,9 +77,10 @@ func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 
-	_think_timer -= delta
-	_bot_fire_timer -= delta
-	_strafe_timer -= delta
+	_think_timer      -= delta
+	_bot_fire_timer   -= delta
+	_strafe_timer     -= delta
+	_jump_timer       -= delta
 	if team_id == 1:
 		_hit_immunity_timer -= delta
 
@@ -88,7 +89,7 @@ func _physics_process(delta: float) -> void:
 		_find_target()
 		if _strafe_timer <= 0:
 			_strafe_dir = 1 if randf() > 0.5 else -1
-			_strafe_timer = randf_range(0.8, 2.4)
+			_strafe_timer = randf_range(0.5, 1.6)
 
 	_handle_gravity(delta)
 	_smart_move(delta)
@@ -99,6 +100,11 @@ func _physics_process(delta: float) -> void:
 		if dist < ATTACK_RANGE:
 			_aim_at_target()
 			_try_fire()
+			# Random jump to become harder to hit
+			if _jump_timer <= 0 and is_on_floor():
+				_jump_timer = randf_range(1.8, 3.5)
+				if randf() < 0.35:
+					velocity.y = JUMP_VELOCITY
 
 func _find_target() -> void:
 	var best_dist := INF
@@ -124,17 +130,16 @@ func _try_fire() -> void:
 	_bot_fire_timer = interval
 
 func _smart_move(delta: float) -> void:
-	# Stuck detection: if barely moving, jump and pick a new destination
 	if _last_pos.distance_to(global_position) < 0.04:
 		_stuck_timer += delta
 	else:
 		_stuck_timer = 0.0
 	_last_pos = global_position
 
-	if _stuck_timer > 0.75:
+	if _stuck_timer > 0.6:
 		_stuck_timer = 0.0
 		if is_on_floor():
-			velocity.y = JUMP_VELOCITY * 0.8
+			velocity.y = JUMP_VELOCITY * 0.9
 		_wander_target = global_position + Vector3(
 			randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
 			randf_range(-WANDER_RANGE, WANDER_RANGE))
@@ -147,17 +152,19 @@ func _smart_move(delta: float) -> void:
 		flat.y = 0
 		var to_target := flat.normalized()
 
-		if dist > ATTACK_RANGE * 0.65:
-			move_dir = to_target           # close in on target
-		elif dist < ATTACK_RANGE * 0.25:
-			move_dir = -to_target          # back up if too close
+		var low_hp := health < max_health * 0.25
 
-		# Lateral strafe while in attack range
+		if low_hp and dist < ATTACK_RANGE * 0.5:
+			move_dir = -to_target   # retreat when badly hurt
+		elif dist > ATTACK_RANGE * 0.55:
+			move_dir = to_target    # close in
+		elif dist < ATTACK_RANGE * 0.18:
+			move_dir = -to_target   # back off if too close
+
 		if dist < ATTACK_RANGE:
 			var strafe := to_target.cross(Vector3.UP) * _strafe_dir
-			move_dir = (move_dir + strafe * 0.8).normalized()
+			move_dir = (move_dir + strafe * 1.1).normalized()
 	else:
-		# Seek zone/objective if the game mode has one, otherwise wander
 		var obj_pos := _get_objective_position()
 		if obj_pos != Vector3.ZERO:
 			var to_obj := obj_pos - global_position
@@ -165,7 +172,6 @@ func _smart_move(delta: float) -> void:
 			if to_obj.length() > 2.5:
 				move_dir = to_obj.normalized()
 			else:
-				# Already at objective — strafe slowly
 				move_dir = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
 		else:
 			var to_wander := _wander_target - global_position
@@ -177,7 +183,7 @@ func _smart_move(delta: float) -> void:
 			else:
 				move_dir = to_wander.normalized()
 
-	# Wall avoidance — cast short ray forward, slide off wall normal
+	# Wall avoidance
 	if move_dir.length() > 0.1:
 		var space := get_world_3d().direct_space_state
 		var origin := global_position + Vector3.UP * 0.6
@@ -218,12 +224,17 @@ func _aim_at_target() -> void:
 	if not _target:
 		return
 	var aim_pos := _target.global_position + Vector3.UP * 1.3
-	# Enemy bots have aim inaccuracy — add slight jitter toward player's general area
+	# Lead moving targets based on distance
+	if _target is CharacterBody3D:
+		var vel: Vector3 = (_target as CharacterBody3D).velocity
+		var dist := global_position.distance_to(_target.global_position)
+		aim_pos += vel * (dist / 100.0)
+	# Enemy bots have slight inaccuracy; friendly bots are spot-on
 	if team_id == 1:
 		aim_pos += Vector3(
-			randf_range(-0.5, 0.5),
-			randf_range(-0.25, 0.25),
-			randf_range(-0.5, 0.5))
+			randf_range(-0.12, 0.12),
+			randf_range(-0.08, 0.08),
+			randf_range(-0.12, 0.12))
 	var dir := (aim_pos - camera_mount.global_position).normalized()
 	camera_mount.rotation.x = -asin(clamp(dir.y, -1.0, 1.0))
 	rotation.y = atan2(-dir.x, -dir.z)

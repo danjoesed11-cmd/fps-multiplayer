@@ -132,10 +132,8 @@ func reload() -> void:
 	if is_reloading or current_ammo == _get_stat("magazine") as int:
 		return
 	if reserve_ammo <= 0:
-		if _owner_id < 0:
-			reserve_ammo = _get_stat("magazine") as int * 10
-		else:
-			return
+		# Auto-refill so neither bots nor players ever get permanently stuck with no ammo
+		reserve_ammo = _get_stat("magazine") as int * (10 if _owner_id < 0 else 4)
 	is_reloading = true
 	if animation_player and animation_player.has_animation("reload"):
 		animation_player.play("reload")

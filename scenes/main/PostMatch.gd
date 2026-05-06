@@ -4,6 +4,8 @@ extends CanvasLayer
 @onready var continue_button: Button = %ContinueButton
 
 func _ready() -> void:
+	layer = 15
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	continue_button.pressed.connect(_on_continue)
 
 func set_winner(team_id: int) -> void:
