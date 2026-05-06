@@ -11,7 +11,7 @@
     "magazine":  [12, 15, 18],
     "reserve":   [36, 45, 54],
     "range":     [80.0, 90.0, 100.0],
-    "spread":    [0.008, 0.006, 0.004]
+    "spread":    [0.004, 0.003, 0.002]
   },
   "assault_rifle": {
     "name": "Assault Rifle",
@@ -25,7 +25,7 @@
     "magazine":  [30, 35, 40],
     "reserve":   [90, 105, 120],
     "range":     [150.0, 175.0, 200.0],
-    "spread":    [0.012, 0.009, 0.006]
+    "spread":    [0.005, 0.004, 0.003]
   },
   "smg": {
     "name": "SMG",
@@ -38,7 +38,7 @@
     "magazine":  [25, 30, 35],
     "reserve":   [75, 90, 105],
     "range":     [80.0, 95.0, 110.0],
-    "spread":    [0.018, 0.014, 0.010]
+    "spread":    [0.010, 0.008, 0.006]
   },
   "shotgun": {
     "name": "Shotgun",
@@ -51,7 +51,7 @@
     "magazine":  [6, 7, 8],
     "reserve":   [18, 21, 24],
     "range":     [30.0, 35.0, 40.0],
-    "spread":    [0.06, 0.05, 0.04]
+    "spread":    [0.05, 0.04, 0.03]
   },
   "sniper_rifle": {
     "name": "Sniper Rifle",
@@ -64,7 +64,7 @@
     "magazine":  [5, 6, 8],
     "reserve":   [15, 18, 24],
     "range":     [400.0, 500.0, 600.0],
-    "spread":    [0.001, 0.001, 0.0]
+    "spread":    [0.0005, 0.0003, 0.0]
   },
   "rocket_launcher": {
     "name": "Rocket Launcher",

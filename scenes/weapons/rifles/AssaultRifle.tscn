@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/weapons/rifles/AssaultRifle.gd" id="1_ar"]
 
@@ -7,6 +7,12 @@ size = Vector3(0.07, 0.12, 0.40)
 
 [sub_resource type="BoxMesh" id="BoxMesh_barrel"]
 size = Vector3(0.035, 0.035, 0.24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_stock"]
+size = Vector3(0.065, 0.085, 0.20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mag"]
+size = Vector3(0.045, 0.14, 0.045)
 
 [sub_resource type="StandardMaterial3D" id="Mat_ar_body"]
 albedo_color = Color(0.15, 0.95, 0.40, 1)
@@ -32,6 +38,16 @@ surface_material_override/0 = SubResource("Mat_ar_body")
 [node name="GunBarrel" type="MeshInstance3D" parent="."]
 position = Vector3(0.0, 0.032, -0.37)
 mesh = SubResource("BoxMesh_barrel")
+surface_material_override/0 = SubResource("Mat_ar_barrel")
+
+[node name="Stock" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.02, 0.20)
+mesh = SubResource("BoxMesh_stock")
+surface_material_override/0 = SubResource("Mat_ar_body")
+
+[node name="Magazine" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.12, -0.10)
+mesh = SubResource("BoxMesh_mag")
 surface_material_override/0 = SubResource("Mat_ar_barrel")
 
 [node name="MuzzlePoint" type="Marker3D" parent="."]

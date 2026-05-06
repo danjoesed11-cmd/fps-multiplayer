@@ -1,9 +1,59 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/weapons/rifles/SniperRifle.gd" id="1_sr"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_sr_body"]
+size = Vector3(0.06, 0.09, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sr_barrel"]
+size = Vector3(0.022, 0.022, 0.54)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sr_scope"]
+size = Vector3(0.045, 0.045, 0.20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sr_stock"]
+size = Vector3(0.055, 0.085, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="Mat_sr_body"]
+albedo_color = Color(0.0, 0.82, 0.95, 1)
+roughness = 0.2
+metallic = 0.75
+emission_enabled = true
+emission = Color(0.0, 0.65, 0.80, 1)
+emission_energy_multiplier = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Mat_sr_dark"]
+albedo_color = Color(0.02, 0.35, 0.45, 1)
+roughness = 0.15
+metallic = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_sr_scope"]
+albedo_color = Color(0.05, 0.05, 0.05, 1)
+roughness = 0.05
+metallic = 1.0
+
 [node name="SniperRifle" type="Node3D"]
 script = ExtResource("1_sr")
+
+[node name="GunBody" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.01, -0.22)
+mesh = SubResource("BoxMesh_sr_body")
+surface_material_override/0 = SubResource("Mat_sr_body")
+
+[node name="GunBarrel" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.028, -0.69)
+mesh = SubResource("BoxMesh_sr_barrel")
+surface_material_override/0 = SubResource("Mat_sr_dark")
+
+[node name="Scope" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.10, -0.20)
+mesh = SubResource("BoxMesh_sr_scope")
+surface_material_override/0 = SubResource("Mat_sr_scope")
+
+[node name="Stock" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.02, 0.15)
+mesh = SubResource("BoxMesh_sr_stock")
+surface_material_override/0 = SubResource("Mat_sr_body")
 
 [node name="MuzzlePoint" type="Marker3D" parent="."]
 position = Vector3(0, 0, -1.0)

@@ -94,15 +94,52 @@ func _make_weapon_card(item_id: String, shop_data: Dictionary, weapon_data: Dict
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(desc_lbl)
 
-	# Quick stats from tier 0
+	# Stat bars
 	var dmg_arr: Array = weapon_data.get("damage", [])
 	var rng_arr: Array = weapon_data.get("range", [])
+	var fr_arr: Array = weapon_data.get("fire_rate", [])
 	if dmg_arr.size() > 0:
-		var stats_lbl := Label.new()
-		stats_lbl.text = "DMG %d  RNG %dm" % [int(dmg_arr[0]), int(rng_arr[0]) if rng_arr.size() > 0 else 0]
-		stats_lbl.add_theme_font_size_override("font_size", 11)
-		stats_lbl.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0, 1))
-		vbox.add_child(stats_lbl)
+		var dmg_val := float(dmg_arr[0])
+		var rng_val := float(rng_arr[0]) if rng_arr.size() > 0 else 0.0
+		var fr_val := float(fr_arr[0]) if fr_arr.size() > 0 else 0.12
+		var fire_speed := clampf(1.0 - fr_val / 2.0, 0.0, 1.0)
+		var stats := [
+			["DMG",   dmg_val / 175.0,    Color(1.0, 0.3, 0.3, 1)],
+			["RANGE", rng_val / 600.0,    Color(0.4, 0.9, 1.0, 1)],
+			["RATE",  fire_speed,          Color(0.4, 1.0, 0.5, 1)],
+		]
+		for stat in stats:
+			var row2 := HBoxContainer.new()
+			row2.add_theme_constant_override("separation", 4)
+			vbox.add_child(row2)
+			var lbl2 := Label.new()
+			lbl2.text = stat[0]
+			lbl2.custom_minimum_size = Vector2(42, 0)
+			lbl2.add_theme_font_size_override("font_size", 10)
+			lbl2.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+			row2.add_child(lbl2)
+			var bar := ProgressBar.new()
+			bar.min_value = 0.0
+			bar.max_value = 1.0
+			bar.value = clampf(stat[1], 0.0, 1.0)
+			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bar.custom_minimum_size = Vector2(0, 10)
+			bar.show_percentage = false
+			var fill_sb := StyleBoxFlat.new()
+			fill_sb.bg_color = stat[2]
+			fill_sb.corner_radius_top_left = 3
+			fill_sb.corner_radius_top_right = 3
+			fill_sb.corner_radius_bottom_right = 3
+			fill_sb.corner_radius_bottom_left = 3
+			bar.add_theme_stylebox_override("fill", fill_sb)
+			var bg_sb := StyleBoxFlat.new()
+			bg_sb.bg_color = Color(0.12, 0.12, 0.22, 1)
+			bg_sb.corner_radius_top_left = 3
+			bg_sb.corner_radius_top_right = 3
+			bg_sb.corner_radius_bottom_right = 3
+			bg_sb.corner_radius_bottom_left = 3
+			bar.add_theme_stylebox_override("background", bg_sb)
+			row2.add_child(bar)
 
 	var sep := HSeparator.new()
 	sep.modulate.a = 0.3

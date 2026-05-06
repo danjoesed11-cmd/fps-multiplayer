@@ -16,6 +16,7 @@ var _fire_rate: float = 0.12
 var _range: float = 150.0
 var _spread: float = 0.03
 var _last_hit_pos: Vector3 = Vector3.ZERO
+var damage_multiplier: float = 1.0  # set on bot weapons to nerf damage
 
 const PAINTBALL_COLORS: Array[Color] = [
 	Color(1.0, 0.1, 0.8, 1),
@@ -117,8 +118,8 @@ func _hitscan_fire(cam: Camera3D) -> void:
 			if node is Player:
 				var victim := node as Player
 				var is_headshot: bool = (result.collider as Node).is_in_group("head_hitbox")
-				var multiplier := weapon_data.headshot_multiplier if (weapon_data and is_headshot) else 1.0
-				victim.take_damage(_get_stat("damage") * multiplier, _owner_id,
+				var headshot_mult := weapon_data.headshot_multiplier if (weapon_data and is_headshot) else 1.0
+				victim.take_damage(_get_stat("damage") * headshot_mult * damage_multiplier, _owner_id,
 					weapon_data.weapon_id if weapon_data else "unknown")
 
 func _projectile_fire(_cam: Camera3D) -> void:

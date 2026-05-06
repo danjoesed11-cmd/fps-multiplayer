@@ -1,9 +1,46 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/weapons/smgs/SMG.gd" id="1_smg"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_smg_body"]
+size = Vector3(0.06, 0.09, 0.28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_smg_barrel"]
+size = Vector3(0.025, 0.025, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_smg_mag"]
+size = Vector3(0.04, 0.12, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="Mat_smg_body"]
+albedo_color = Color(0.70, 0.08, 0.92, 1)
+roughness = 0.25
+metallic = 0.6
+emission_enabled = true
+emission = Color(0.55, 0.0, 0.80, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_smg_dark"]
+albedo_color = Color(0.35, 0.02, 0.50, 1)
+roughness = 0.2
+metallic = 0.85
+
 [node name="SMG" type="Node3D"]
 script = ExtResource("1_smg")
+
+[node name="GunBody" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.01, -0.10)
+mesh = SubResource("BoxMesh_smg_body")
+surface_material_override/0 = SubResource("Mat_smg_body")
+
+[node name="GunBarrel" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.025, -0.33)
+mesh = SubResource("BoxMesh_smg_barrel")
+surface_material_override/0 = SubResource("Mat_smg_dark")
+
+[node name="Magazine" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, -0.10, -0.10)
+mesh = SubResource("BoxMesh_smg_mag")
+surface_material_override/0 = SubResource("Mat_smg_dark")
 
 [node name="MuzzlePoint" type="Marker3D" parent="."]
 position = Vector3(0, 0, -0.45)
