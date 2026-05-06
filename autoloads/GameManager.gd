@@ -38,7 +38,7 @@ func _ready() -> void:
 
 func transition_to_lobby() -> void:
 	app_state = AppState.LOBBY
-	get_tree().change_scene_to_file("res://scenes/lobby/Lobby.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/lobby/Lobby.tscn")
 
 func return_to_main_menu() -> void:
 	app_state = AppState.MAIN_MENU
@@ -49,7 +49,7 @@ func return_to_main_menu() -> void:
 	if current_map_node:
 		current_map_node.queue_free()
 		current_map_node = null
-	get_tree().change_scene_to_file("res://scenes/main/MainMenu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/MainMenu.tscn")
 
 func start_match(mode_id: String, map_id: String) -> void:
 	if not multiplayer.is_server():
@@ -67,7 +67,7 @@ func start_match_offline(mode_id: String, map_id: String) -> void:
 @rpc("authority", "call_local", "reliable")
 func _begin_loading(mode_id: String, map_id: String) -> void:
 	app_state = AppState.LOADING
-	get_tree().change_scene_to_file("res://scenes/main/LoadingScreen.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/LoadingScreen.tscn")
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_load_match_scene(mode_id, map_id)

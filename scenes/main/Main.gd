@@ -1,4 +1,4 @@
 extends Node
 
 func _ready() -> void:
-	get_tree().change_scene_to_file("res://scenes/main/MainMenu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/MainMenu.tscn")
