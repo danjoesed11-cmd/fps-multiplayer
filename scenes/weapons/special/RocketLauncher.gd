@@ -10,7 +10,7 @@ func _execute_fire() -> void:
 		return
 	if not ResourceLoader.exists(ROCKET_SCENE):
 		return
-	var rocket := load(ROCKET_SCENE).instantiate()
+	var rocket: Node3D = load(ROCKET_SCENE).instantiate()
 	get_tree().root.add_child(rocket)
 	if muzzle_point:
 		rocket.global_position = muzzle_point.global_position
