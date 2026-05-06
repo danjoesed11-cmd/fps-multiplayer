@@ -443,3 +443,4 @@ func _save_settings() -> void:
 			SettingsManager.set_setting("display_name", n)
 	if _ip_input:
 		SettingsManager.set_setting("last_ip", _ip_input.text.strip_edges())
+

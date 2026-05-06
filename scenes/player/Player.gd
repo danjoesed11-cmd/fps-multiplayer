@@ -211,7 +211,7 @@ func _spawn_death_fx(pos: Vector3) -> void:
 	fx.add_child(flash)
 
 	# Spinning star burst particles
-	var star_colors := [Color(1, 0.2, 0.8), Color(0.2, 1.0, 0.4), Color(1, 0.9, 0.1), Color(0.3, 0.8, 1.0)]
+	var star_colors: Array[Color] = [Color(1, 0.2, 0.8), Color(0.2, 1.0, 0.4), Color(1, 0.9, 0.1), Color(0.3, 0.8, 1.0)]
 	for i in 8:
 		var star := MeshInstance3D.new()
 		root.add_child(star)
@@ -220,7 +220,7 @@ func _spawn_death_fx(pos: Vector3) -> void:
 		sm.radius = randf_range(0.12, 0.25)
 		sm.height = sm.radius * 2
 		star.mesh = sm
-		var sc := star_colors[i % star_colors.size()]
+		var sc: Color = star_colors[i % star_colors.size()]
 		var smat := StandardMaterial3D.new()
 		smat.albedo_color = sc
 		smat.emission_enabled = true
