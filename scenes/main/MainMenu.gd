@@ -9,12 +9,19 @@ var _port_input: LineEdit
 var _status_label: Label
 var _char_catalog: Dictionary = {}
 var _skin_feedback: Label
+var _root_hbox: HBoxContainer = null
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_load_catalog()
-	_build_ui()
+	# Deferred so the viewport/parent rect is fully resolved before we size the UI
+	call_deferred("_build_ui")
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+func _on_viewport_resized() -> void:
+	if _root_hbox and is_instance_valid(_root_hbox):
+		_root_hbox.size = get_viewport().get_visible_rect().size
 
 func _load_catalog() -> void:
 	var file := FileAccess.open(CHARACTER_CATALOG_PATH, FileAccess.READ)
@@ -26,22 +33,15 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
-	# Full-screen horizontal split
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 0)
-	add_child(hbox)
-	# Set anchors AFTER add_child so parent rect is known
-	hbox.anchor_left   = 0.0
-	hbox.anchor_top    = 0.0
-	hbox.anchor_right  = 1.0
-	hbox.anchor_bottom = 1.0
-	hbox.offset_left   = 0
-	hbox.offset_top    = 0
-	hbox.offset_right  = 0
-	hbox.offset_bottom = 0
+	var vp_size := get_viewport().get_visible_rect().size
+	_root_hbox = HBoxContainer.new()
+	_root_hbox.add_theme_constant_override("separation", 0)
+	_root_hbox.position = Vector2.ZERO
+	_root_hbox.size = vp_size
+	add_child(_root_hbox)
 
-	_build_left_panel(hbox)
-	_build_right_panel(hbox)
+	_build_left_panel(_root_hbox)
+	_build_right_panel(_root_hbox)
 
 func _panel_bg(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -318,8 +318,9 @@ func _on_equip(slot: String, item_id: String, cost: int, pts_lbl: Label) -> void
 	_skin_feedback.text = "Equipped!"
 	_skin_feedback.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 	pts_lbl.text = "%d pts  (earn 500+ pts per match win)" % SettingsManager.get_setting("cosmetic_points", 0)
-	for child in get_children():
-		child.queue_free()
+	if _root_hbox and is_instance_valid(_root_hbox):
+		_root_hbox.queue_free()
+		_root_hbox = null
 	_build_ui()
 
 # ── Helpers ───────────────────────────────────────────────────
