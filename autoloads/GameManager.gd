@@ -49,6 +49,13 @@ func return_to_main_menu() -> void:
 	if current_map_node:
 		current_map_node.queue_free()
 		current_map_node = null
+	if world_root:
+		world_root.queue_free()
+		world_root = null
+	players_root = null
+	UIManager.pop_all_screens()
+	UIManager.hide_hud()
+	get_tree().paused = false
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main/MainMenu.tscn")
 
 func start_match(mode_id: String, map_id: String) -> void:

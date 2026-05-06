@@ -25,6 +25,7 @@ var _my_id: int = 0
 var _pause_menu: Node = null
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_my_id = multiplayer.get_unique_id()
 	EventBus.ammo_changed.connect(_on_ammo_changed)
 	EventBus.coins_changed.connect(_on_coins_changed)
@@ -35,7 +36,6 @@ func _ready() -> void:
 	hit_indicator.hide()
 	low_health_overlay.modulate.a = 0.0
 
-	# Connect to local player health
 	await get_tree().process_frame
 	_find_local_player()
 
@@ -64,9 +64,16 @@ func _process(delta: float) -> void:
 	click_to_play.visible = not captured
 
 	if Input.is_action_just_pressed("pause"):
-		if _pause_menu == null or not is_instance_valid(_pause_menu):
+		if GameManager.app_state != GameManager.AppState.IN_MATCH:
+			return
+		if _pause_menu != null and is_instance_valid(_pause_menu):
+			_pause_menu.queue_free()
+			_pause_menu = null
+			get_tree().paused = false
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		else:
 			_pause_menu = load("res://scenes/main/PauseMenu.tscn").instantiate()
-			get_tree().root.add_child(_pause_menu)
+			add_child(_pause_menu)
 			_pause_menu.resumed.connect(func(): _pause_menu = null)
 		return
 

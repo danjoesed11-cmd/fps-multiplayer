@@ -5,6 +5,7 @@ signal resumed()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 10
 	get_tree().paused = true
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_build_ui()
@@ -81,9 +82,6 @@ func _on_settings() -> void:
 
 func _on_quit() -> void:
 	get_tree().paused = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.return_to_main_menu()
 	queue_free()
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_just_pressed("pause"):
-		_on_resume()
