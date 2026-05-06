@@ -22,6 +22,7 @@ const KILL_FEED_DURATION := 4.0
 
 var _hit_flash_timer: float = 0.0
 var _my_id: int = 0
+var _pause_menu: Node = null
 
 func _ready() -> void:
 	_my_id = multiplayer.get_unique_id()
@@ -61,6 +62,13 @@ func _process(delta: float) -> void:
 	# Show hint when mouse is not captured
 	var captured := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
 	click_to_play.visible = not captured
+
+	if Input.is_action_just_pressed("pause"):
+		if _pause_menu == null or not is_instance_valid(_pause_menu):
+			_pause_menu = load("res://scenes/main/PauseMenu.tscn").instantiate()
+			get_tree().root.add_child(_pause_menu)
+			_pause_menu.resumed.connect(func(): _pause_menu = null)
+		return
 
 	if Input.is_action_just_pressed("open_shop"):
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

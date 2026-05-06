@@ -184,22 +184,19 @@ theme_override_styles/normal = SubResource("StyleBox_input")
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 
-[node name="MultiRow" type="HBoxContainer" parent="CenterContainer/Panel/VBox"]
-theme_override_constants/separation = 10
-
-[node name="HostButton" type="Button" parent="CenterContainer/Panel/VBox/MultiRow"]
+[node name="JoinButton" type="Button" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "🖥  HOST"
-custom_minimum_size = Vector2(0, 46)
-theme_override_font_sizes/font_size = 16
+text = "🔗  JOIN LAN GAME"
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 15
 
-[node name="JoinButton" type="Button" parent="CenterContainer/Panel/VBox/MultiRow"]
+[node name="SettingsButton" type="Button" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "🔗  JOIN"
-custom_minimum_size = Vector2(0, 46)
-theme_override_font_sizes/font_size = 16
+text = "⚙  Settings"
+custom_minimum_size = Vector2(0, 36)
+theme_override_font_sizes/font_size = 13
+flat = true
+theme_override_colors/font_color = Color(1, 1, 1, 0.55)
 
 [node name="StatusLabel" type="Label" parent="CenterContainer/Panel/VBox"]
 unique_name_in_owner = true

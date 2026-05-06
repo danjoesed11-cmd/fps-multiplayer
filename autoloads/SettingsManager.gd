@@ -7,12 +7,16 @@ var _defaults: Dictionary = {
 	"display_name": "Player",
 	"mouse_sensitivity": 0.002,
 	"fov": 90.0,
+	"camera_mode": "fps",
 	"graphics_preset": "medium",
 	"sfx_volume": 0.8,
 	"music_volume": 0.5,
 	"fullscreen": false,
 	"vsync": true,
+	"cosmetic_points": 0,
 }
+
+signal setting_changed(key: String, value: Variant)
 
 func _ready() -> void:
 	_config.load(SETTINGS_PATH)
@@ -26,6 +30,7 @@ func set_setting(key: String, value: Variant) -> void:
 	_config.set_value("settings", key, value)
 	_config.save(SETTINGS_PATH)
 	_apply_setting(key, value)
+	setting_changed.emit(key, value)
 
 func get_cosmetics() -> Dictionary:
 	return {

@@ -11,8 +11,11 @@ var _think_timer: float = 0.0
 var _wander_target: Vector3 = Vector3.ZERO
 var _nav_agent: NavigationAgent3D = null
 
+@onready var bot_body: MeshInstance3D = $BotBody
+@onready var bot_head: MeshInstance3D = $BotHead
+
 func _ready() -> void:
-	name = str(peer_id)  # must match str(peer_id) so GameManager.get_player_node() finds us
+	name = str(peer_id)
 	set_multiplayer_authority(1)
 	player_camera.current = false
 	if has_node("NavigationAgent3D"):
@@ -21,6 +24,29 @@ func _ready() -> void:
 		randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
 		randf_range(-WANDER_RANGE, WANDER_RANGE))
 	weapon_manager.initialize(peer_id, true)
+	_apply_team_colors()
+
+func _apply_team_colors() -> void:
+	var body_col: Color
+	var head_col: Color
+	if team_id == 0:
+		body_col = Color(0.05, 0.25, 0.75, 1)   # dark blue
+		head_col = Color(0.35, 0.75, 1.0, 1)    # light blue
+	else:
+		body_col = Color(0.85, 0.12, 0.05, 1)   # red
+		head_col = Color(1.0, 0.42, 0.0, 1)     # orange
+	_tint_mesh(bot_body, body_col, 0.5)
+	_tint_mesh(bot_head, head_col, 0.6)
+
+func _tint_mesh(mesh: MeshInstance3D, color: Color, emission: float) -> void:
+	if not mesh:
+		return
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = emission
+	mesh.material_override = mat
 
 func _physics_process(delta: float) -> void:
 	if not is_alive:

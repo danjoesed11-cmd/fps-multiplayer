@@ -4,16 +4,19 @@ extends CanvasLayer
 @onready var coin_label: Label = %CoinLabel
 @onready var weapon_grid: GridContainer = %WeaponGrid
 @onready var upgrade_panel: VBoxContainer = %UpgradePanel
+@onready var skin_panel: VBoxContainer = %SkinPanel
 @onready var feedback_label: Label = %FeedbackLabel
 @onready var close_button: Button = %CloseButton
 @onready var tab_container: TabContainer = %TabContainer
 
 const WEAPON_CATALOG_PATH := "res://data/weapon_catalog.json"
 const SHOP_CATALOG_PATH := "res://data/shop_catalog.json"
+const CHARACTER_CATALOG_PATH := "res://data/character_catalog.json"
 
 var _my_id: int = 0
 var _shop_catalog: Dictionary = {}
 var _weapon_catalog: Dictionary = {}
+var _char_catalog: Dictionary = {}
 
 func _ready() -> void:
 	_my_id = multiplayer.get_unique_id()
@@ -25,6 +28,7 @@ func _ready() -> void:
 	_load_catalogs()
 	_populate_weapons()
 	_populate_upgrades()
+	_populate_skins()
 	_refresh_coins()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -39,6 +43,11 @@ func _load_catalogs() -> void:
 		var json := JSON.new()
 		if json.parse(file.get_as_text()) == OK:
 			_weapon_catalog = json.get_data()
+	file = FileAccess.open(CHARACTER_CATALOG_PATH, FileAccess.READ)
+	if file:
+		var json := JSON.new()
+		if json.parse(file.get_as_text()) == OK:
+			_char_catalog = json.get_data()
 
 func _populate_weapons() -> void:
 	for child in weapon_grid.get_children():
@@ -189,9 +198,93 @@ func _populate_upgrades() -> void:
 		sep.modulate.a = 0.3
 		upgrade_panel.add_child(sep)
 
+func _populate_skins() -> void:
+	for child in skin_panel.get_children():
+		child.queue_free()
+
+	var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
+	var pts_lbl := Label.new()
+	pts_lbl.text = "⭐ %d pts  (earn 500 pts per match win)" % pts
+	pts_lbl.add_theme_font_size_override("font_size", 14)
+	pts_lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.2, 1))
+	skin_panel.add_child(pts_lbl)
+
+	var sep := HSeparator.new()
+	sep.modulate.a = 0.3
+	skin_panel.add_child(sep)
+
+	var slots := ["body", "head", "kill_fx"]
+	var slot_labels := {"body": "Body Skin", "head": "Headgear", "kill_fx": "Kill Effect"}
+
+	for slot in slots:
+		var section := Label.new()
+		section.text = slot_labels.get(slot, slot).to_upper()
+		section.add_theme_font_size_override("font_size", 11)
+		section.add_theme_color_override("font_color", Color(0.5, 0.85, 1.0, 1))
+		skin_panel.add_child(section)
+
+		var equipped: String = SettingsManager.get_setting("cosmetic_%s" % slot, "")
+		for item_id in _char_catalog:
+			var data: Dictionary = _char_catalog[item_id]
+			if data.get("slot", "") != slot:
+				continue
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			skin_panel.add_child(row)
+
+			var name_lbl := Label.new()
+			name_lbl.text = data.get("name", item_id)
+			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_lbl.add_theme_font_size_override("font_size", 13)
+			if item_id == equipped:
+				name_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5, 1))
+				name_lbl.text += "  ✓"
+			row.add_child(name_lbl)
+
+			var cost: int = data.get("cost", 0)
+			if cost == 0:
+				var free_lbl := Label.new()
+				free_lbl.text = "FREE"
+				free_lbl.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5, 1))
+				free_lbl.add_theme_font_size_override("font_size", 12)
+				row.add_child(free_lbl)
+			else:
+				var cost_lbl := Label.new()
+				cost_lbl.text = "%d pts" % cost
+				cost_lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.2, 1))
+				cost_lbl.add_theme_font_size_override("font_size", 12)
+				row.add_child(cost_lbl)
+
+			var btn := Button.new()
+			btn.text = "Equip" if (cost == 0 or pts >= cost) else "Need pts"
+			btn.custom_minimum_size = Vector2(70, 28)
+			btn.disabled = (cost > 0 and pts < cost)
+			_style_buy_button(btn)
+			btn.pressed.connect(_on_skin_equip.bind(slot, item_id, cost))
+			row.add_child(btn)
+
+		var sep2 := HSeparator.new()
+		sep2.modulate.a = 0.2
+		skin_panel.add_child(sep2)
+
+func _on_skin_equip(slot: String, item_id: String, cost: int) -> void:
+	var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
+	if cost > 0 and pts < cost:
+		feedback_label.text = "Not enough points (need %d, have %d)" % [cost, pts]
+		feedback_label.modulate = Color(1.0, 0.4, 0.3, 1)
+		return
+	if cost > 0:
+		SettingsManager.set_setting("cosmetic_points", pts - cost)
+	SettingsManager.set_setting("cosmetic_%s" % slot, item_id)
+	feedback_label.text = "Equipped %s!" % item_id.replace("_", " ")
+	feedback_label.modulate = Color(0.3, 1.0, 0.4, 1)
+	_populate_skins()
+
 func _on_tab_changed(tab: int) -> void:
 	if tab == 1:
 		_populate_upgrades()
+	elif tab == 2:
+		_populate_skins()
 
 func _refresh_coins() -> void:
 	var coins := EconomyManager.get_coins(_my_id)

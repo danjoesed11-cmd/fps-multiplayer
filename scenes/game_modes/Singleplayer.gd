@@ -11,6 +11,7 @@ func _ready() -> void:
 	mode_id = "singleplayer"
 	team_count = 2
 	score_limit = 10
+	match_duration = 99999.0   # score-only ending; no timer
 	_countdown_time = 1.0
 	super._ready()
 
@@ -63,5 +64,9 @@ func _on_player_killed(victim_id: int, killer_id: int, weapon_id: String) -> voi
 func _check_win_condition() -> void:
 	for i in team_count:
 		if team_scores[i] >= score_limit:
+			if i == 0:  # player's team won — award cosmetic points
+				var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
+				SettingsManager.set_setting("cosmetic_points", pts + 500)
+				EventBus.coins_changed.emit(-99, pts + 500)  # signal UI to refresh
 			GameManager.end_match(i)
 			return

@@ -2,7 +2,6 @@ class_name MainMenu
 extends Control
 
 @onready var name_input: LineEdit    = %NameInput
-@onready var host_button: Button     = %HostButton
 @onready var join_button: Button     = %JoinButton
 @onready var ip_input: LineEdit      = %IPInput
 @onready var port_input: LineEdit    = %PortInput
@@ -11,15 +10,16 @@ extends Control
 @onready var survival_button: Button = %SurvivalButton
 @onready var zone_ai_button: Button  = %ZoneAIButton
 @onready var quit_button: Button     = %QuitButton
+@onready var settings_button: Button = %SettingsButton
 @onready var panel: PanelContainer   = $CenterContainer/Panel
 
 func _ready() -> void:
 	tdm_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
 	survival_button.pressed.connect(func(): _start_ai("singleplayer"))
 	zone_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
-	host_button.pressed.connect(_on_host)
 	join_button.pressed.connect(_on_join)
 	quit_button.pressed.connect(get_tree().quit)
+	settings_button.pressed.connect(_on_settings)
 
 	name_input.text = SettingsManager.get_setting("display_name", "Player")
 	ip_input.text   = SettingsManager.get_setting("last_ip", "")
@@ -29,15 +29,11 @@ func _ready() -> void:
 	_style_button(tdm_ai_button,   Color(1.0, 0.45, 0.0), Color(1.0, 0.6, 0.1), Color(1, 1, 1))
 	_style_button(survival_button, Color(0.7, 0.2, 0.8),  Color(0.85, 0.3, 1.0), Color(1, 1, 1))
 	_style_button(zone_ai_button,  Color(0.1, 0.6, 0.9),  Color(0.2, 0.75, 1.0), Color(1, 1, 1))
-	_style_button(host_button,     Color(0.18, 0.82, 0.45), Color(0.22, 0.95, 0.55), Color(1, 1, 1))
 	_style_button(join_button,     Color(0.2, 0.55, 1.0),   Color(0.3, 0.65, 1.0),   Color(1, 1, 1))
-
-	if OS.has_feature("web"):
-		host_button.hide()
 
 	_animate_in()
 
-# ── Button styling ─────────────────────────────────────────
+# ── Button styling ──────────────────────────────────────────
 
 func _style_button(btn: Button, normal_color: Color, hover_color: Color, font_color: Color) -> void:
 	for state in [["normal", normal_color], ["hover", hover_color], ["pressed", normal_color.darkened(0.1)]]:
@@ -54,7 +50,7 @@ func _style_button(btn: Button, normal_color: Color, hover_color: Color, font_co
 	btn.add_theme_color_override("font_hover_color",   font_color)
 	btn.add_theme_color_override("font_pressed_color", font_color)
 
-# ── Intro animation ────────────────────────────────────────
+# ── Intro animation ─────────────────────────────────────────
 
 func _animate_in() -> void:
 	panel.modulate.a = 0.0
@@ -65,7 +61,7 @@ func _animate_in() -> void:
 	tw.tween_property(panel, "modulate:a", 1.0, 0.55)
 	tw.parallel().tween_property(panel, "position:y", natural_y, 0.55)
 
-# ── AI modes ───────────────────────────────────────────────
+# ── AI modes ────────────────────────────────────────────────
 
 func _start_ai(mode_id: String) -> void:
 	_save_settings()
@@ -74,18 +70,7 @@ func _start_ai(mode_id: String) -> void:
 	PlayerRegistry.request_register(_get_display_name(), SettingsManager.get_cosmetics())
 	GameManager.start_match_offline(mode_id, "arena01")
 
-# ── LAN host / join ────────────────────────────────────────
-
-func _on_host() -> void:
-	_save_settings()
-	var port := _get_port()
-	var err := NetworkManager.create_server(port)
-	if err == OK:
-		_register_self()
-		_show_status("Hosting on port %d — share your local IP with friends" % port, Color(0.3, 1.0, 0.5))
-		GameManager.transition_to_lobby()
-	else:
-		_show_status("Couldn't host — port %d may be in use" % port, Color(1, 0.4, 0.3))
+# ── LAN join ────────────────────────────────────────────────
 
 func _on_join() -> void:
 	var ip := ip_input.text.strip_edges()
@@ -100,20 +85,22 @@ func _on_join() -> void:
 	NetworkManager.connection_failed.connect(_on_failed, CONNECT_ONE_SHOT)
 
 func _on_connected(_id: int) -> void:
-	_register_self()
+	PlayerRegistry.request_register.rpc_id(1, _get_display_name(), SettingsManager.get_cosmetics())
 	GameManager.transition_to_lobby()
 
 func _on_failed() -> void:
 	_show_status("Connection failed — check the IP and make sure host is running", Color(1, 0.4, 0.3))
 
-# ── Helpers ────────────────────────────────────────────────
+# ── Settings ────────────────────────────────────────────────
+
+func _on_settings() -> void:
+	UIManager.push_screen("res://scenes/main/SettingsScreen.tscn")
+
+# ── Helpers ─────────────────────────────────────────────────
 
 func _show_status(msg: String, color: Color) -> void:
 	status_label.text     = msg
 	status_label.modulate = color
-
-func _register_self() -> void:
-	PlayerRegistry.request_register.rpc_id(1, _get_display_name(), SettingsManager.get_cosmetics())
 
 func _get_display_name() -> String:
 	var n := name_input.text.strip_edges()

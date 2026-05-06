@@ -32,6 +32,8 @@ func _ready() -> void:
 	if is_multiplayer_authority():
 		player_camera.current = true
 		_capture_mouse()
+		_apply_camera_mode(SettingsManager.get_setting("camera_mode", "fps"))
+		SettingsManager.setting_changed.connect(_on_setting_changed)
 	else:
 		player_camera.current = false
 
@@ -43,6 +45,29 @@ func _ready() -> void:
 
 func _capture_mouse() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _on_setting_changed(key: String, value: Variant) -> void:
+	if key == "camera_mode":
+		_apply_camera_mode(value)
+	elif key == "mouse_sensitivity":
+		pass  # read per-frame via get_sensitivity()
+	elif key == "fov":
+		player_camera.fov = float(value)
+
+func _apply_camera_mode(mode: String) -> void:
+	match mode:
+		"fps":
+			player_camera.position = Vector3.ZERO
+			player_camera.rotation_degrees = Vector3.ZERO
+			weapon_holder.show()
+		"tps":
+			player_camera.position = Vector3(0, 0.8, 2.8)
+			player_camera.rotation_degrees = Vector3(-8, 0, 0)
+			weapon_holder.hide()
+		"far":
+			player_camera.position = Vector3(0, 1.6, 5.5)
+			player_camera.rotation_degrees = Vector3(-14, 0, 0)
+			weapon_holder.hide()
 
 func _physics_process(delta: float) -> void:
 	if _invincible_timer > 0:
@@ -89,12 +114,8 @@ func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
 		return
 
-	# Escape releases / re-captures the mouse
-	if event.is_action_pressed("ui_cancel"):
-		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			_capture_mouse()
+	# Escape opens pause menu (handled by HUD)
+	if event.is_action_pressed("pause"):
 		return
 
 	# Any click re-captures the mouse when it was released
