@@ -40,7 +40,7 @@ func _ready() -> void:
 	if team_id == 1:
 		# Nerf enemy bot damage after weapon manager sets up
 		await get_tree().process_frame
-		var wm := weapon_manager.get_current_weapon()
+		var wm: WeaponBase = weapon_manager.get_current_weapon()
 		if wm:
 			wm.damage_multiplier = ENEMY_DAMAGE_MULT
 

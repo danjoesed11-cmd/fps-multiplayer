@@ -21,13 +21,14 @@ var _invincible_timer: float = 0.0
 @onready var weapon_holder: Node3D = $CameraMount/PlayerCamera/WeaponHolder
 @onready var weapon_manager: Node = $WeaponManager
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
-@onready var network_sync: MultiplayerSynchronizer = $NetworkSynchronizer
+var network_sync: MultiplayerSynchronizer = null
 
 var _camera_pitch: float = 0.0
 var _is_crouching: bool = false
 var _is_sprinting: bool = false
 
 func _ready() -> void:
+	network_sync = get_node_or_null("NetworkSynchronizer")
 	set_multiplayer_authority(peer_id)
 	if is_multiplayer_authority():
 		player_camera.current = true
