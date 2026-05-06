@@ -182,11 +182,111 @@ func _sync_health(new_health: float) -> void:
 @rpc("authority", "call_local", "reliable")
 func _sync_death(killer_id: int, weapon_id: String) -> void:
 	is_alive = false
+	_spawn_death_fx(global_position)
 	if is_multiplayer_authority():
 		_on_local_death()
 
 func _on_local_death() -> void:
 	pass
+
+func _spawn_death_fx(pos: Vector3) -> void:
+	var root := get_tree().root
+	var fx := Node3D.new()
+	root.add_child(fx)
+	fx.global_position = pos + Vector3.UP * 0.8
+
+	# Flash burst: bright white expanding sphere
+	var flash := MeshInstance3D.new()
+	flash.mesh = SphereMesh.new()
+	(flash.mesh as SphereMesh).radius = 0.5
+	(flash.mesh as SphereMesh).height = 1.0
+	var flash_mat := StandardMaterial3D.new()
+	flash_mat.albedo_color = Color(1, 1, 0.6, 0.9)
+	flash_mat.emission_enabled = true
+	flash_mat.emission = Color(1, 1, 0.4, 1)
+	flash_mat.emission_energy_multiplier = 8.0
+	flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	flash.material_override = flash_mat
+	fx.add_child(flash)
+
+	# Spinning star burst particles
+	var star_colors := [Color(1, 0.2, 0.8), Color(0.2, 1.0, 0.4), Color(1, 0.9, 0.1), Color(0.3, 0.8, 1.0)]
+	for i in 8:
+		var star := MeshInstance3D.new()
+		root.add_child(star)
+		star.global_position = pos + Vector3.UP * 0.8
+		var sm := SphereMesh.new()
+		sm.radius = randf_range(0.12, 0.25)
+		sm.height = sm.radius * 2
+		star.mesh = sm
+		var sc := star_colors[i % star_colors.size()]
+		var smat := StandardMaterial3D.new()
+		smat.albedo_color = sc
+		smat.emission_enabled = true
+		smat.emission = sc
+		smat.emission_energy_multiplier = 6.0
+		smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		star.material_override = smat
+		var angle := i * TAU / 8.0
+		var dist := randf_range(1.2, 2.2)
+		var end_pos := pos + Vector3.UP * randf_range(0.5, 2.0) + Vector3(cos(angle) * dist, 0, sin(angle) * dist)
+		var tw := star.create_tween()
+		tw.tween_property(star, "global_position", end_pos, 0.45).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tw.parallel().tween_property(smat, "albedo_color:a", 0.0, 0.5)
+		tw.tween_callback(star.queue_free)
+
+	# Bone cross slashes (X shape)
+	for i in 3:
+		var bone := MeshInstance3D.new()
+		root.add_child(bone)
+		bone.global_position = pos + Vector3.UP * (0.6 + i * 0.5)
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.06, 0.06, randf_range(0.6, 1.0))
+		bone.mesh = bm
+		bone.rotation.y = randf() * TAU
+		var bmat := StandardMaterial3D.new()
+		bmat.albedo_color = Color(1, 1, 1, 1)
+		bmat.emission_enabled = true
+		bmat.emission = Color(0.8, 0.8, 1.0, 1)
+		bmat.emission_energy_multiplier = 3.0
+		bmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		bmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		bone.material_override = bmat
+		var tw2 := bone.create_tween()
+		tw2.tween_property(bone, "global_position:y", bone.global_position.y + randf_range(1.0, 2.5), 0.6).set_ease(Tween.EASE_OUT)
+		tw2.parallel().tween_property(bone, "scale", Vector3(1.5, 1.5, 1.5), 0.3)
+		tw2.parallel().tween_property(bmat, "albedo_color:a", 0.0, 0.7)
+		tw2.tween_callback(bone.queue_free)
+
+	# Electric arcs (thin zigzag lines emitted outward)
+	for i in 6:
+		var arc := MeshInstance3D.new()
+		root.add_child(arc)
+		arc.global_position = pos + Vector3.UP * randf_range(0.3, 1.5)
+		var am := BoxMesh.new()
+		am.size = Vector3(0.03, 0.03, randf_range(0.8, 1.8))
+		arc.mesh = am
+		arc.rotation = Vector3(randf_range(-0.4, 0.4), randf() * TAU, randf_range(-0.3, 0.3))
+		var amat := StandardMaterial3D.new()
+		amat.albedo_color = Color(0.5, 0.8, 1.0, 1)
+		amat.emission_enabled = true
+		amat.emission = Color(0.4, 0.7, 1.0, 1)
+		amat.emission_energy_multiplier = 12.0
+		amat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		amat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		arc.material_override = amat
+		var tw3 := arc.create_tween()
+		tw3.tween_property(arc, "scale", Vector3(2.0, 2.0, 2.0), 0.2)
+		tw3.parallel().tween_property(amat, "albedo_color:a", 0.0, 0.35)
+		tw3.tween_callback(arc.queue_free)
+
+	# Fade flash and clean up root node
+	var ftw := flash.create_tween()
+	ftw.tween_property(flash, "scale", Vector3(3, 3, 3), 0.25).set_ease(Tween.EASE_OUT)
+	ftw.parallel().tween_property(flash_mat, "albedo_color:a", 0.0, 0.3)
+	ftw.tween_callback(fx.queue_free)
 
 @rpc("authority", "call_local", "reliable")
 func _force_respawn(spawn_pos: Vector3) -> void:

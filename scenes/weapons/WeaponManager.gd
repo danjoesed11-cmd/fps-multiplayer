@@ -111,6 +111,16 @@ func _switch_to_slot(slot: int) -> void:
 		var weapon_id := _get_weapon_id(next_weapon)
 		EventBus.weapon_switched.emit(_owner_id, weapon_id)
 
+func _cycle_slot(direction: int) -> void:
+	var tried := 0
+	var next := _current_slot
+	while tried < MAX_SLOTS:
+		next = (next + direction + MAX_SLOTS) % MAX_SLOTS
+		if _slots[next] != null and is_instance_valid(_slots[next]):
+			_switch_to_slot(next)
+			return
+		tried += 1
+
 func _process(_delta: float) -> void:
 	if not _is_local:
 		return
@@ -120,6 +130,10 @@ func _process(_delta: float) -> void:
 		_switch_to_slot(1)
 	elif Input.is_action_just_pressed("weapon_slot_3"):
 		_switch_to_slot(2)
+	elif Input.is_action_just_pressed("weapon_next"):
+		_cycle_slot(1)
+	elif Input.is_action_just_pressed("weapon_prev"):
+		_cycle_slot(-1)
 	elif Input.is_action_pressed("fire"):
 		var w := get_current_weapon()
 		if w:

@@ -14,9 +14,12 @@ extends Control
 @onready var panel: PanelContainer   = $CenterContainer/Panel
 
 func _ready() -> void:
-	tdm_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
-	survival_button.pressed.connect(func(): _start_ai("singleplayer"))
-	zone_ai_button.pressed.connect(func(): _start_ai("singleplayer"))
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	get_tree().paused = false
+
+	tdm_ai_button.pressed.connect(func(): _start_ai("tdm"))
+	survival_button.pressed.connect(func(): _start_ai("wipeout"))
+	zone_ai_button.pressed.connect(func(): _start_ai("zone_wars"))
 	join_button.pressed.connect(_on_join)
 	quit_button.pressed.connect(get_tree().quit)
 	settings_button.pressed.connect(_on_settings)

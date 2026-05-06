@@ -1,123 +1,151 @@
 class_name ZoneWars
 extends GameModeBase
 
-class ZoneState:
-	var zone_id: int = 0
-	var controlling_team: int = -1
-	var capture_progress: float = 0.0
-	var capturing_team: int = -1
-	var players_in_zone: Dictionary = {}
+# Zone Wars: One hot zone in the center. Teams score while they hold it.
+# Zone shifts to a new position every ZONE_SHIFT_INTERVAL seconds.
+# Kill to earn extra points. First to 100 wins.
 
-const CAPTURE_RATE := 0.15
-const SCORE_INTERVAL := 1.0
-const SCORE_PER_ZONE := 1
+const BOT_SCENE := "res://scenes/player/BotPlayer.tscn"
+const BOT_COUNT := 6
+const ZONE_RADIUS := 10.0
+const ZONE_SHIFT_INTERVAL := 45.0
+const SCORE_TICK_INTERVAL := 1.0
+const ZONE_POSITIONS: Array = [
+	Vector3(0, 0.5, 0),
+	Vector3(20, 0.5, 0),
+	Vector3(-20, 0.5, 0),
+	Vector3(0, 0.5, 20),
+	Vector3(0, 0.5, -20),
+	Vector3(15, 0.5, 15),
+	Vector3(-15, 0.5, -15),
+]
 
-var zones: Array[ZoneState] = []
+var zone_pos: Vector3 = Vector3.ZERO
 var _score_timer: float = 0.0
+var _shift_timer: float = 0.0
+var _zone_marker: Node3D = null
 
 func _ready() -> void:
 	mode_id = "zone_wars"
-	score_limit = 200
-	match_duration = 900.0
+	score_limit = 100
+	match_duration = 600.0
+	team_count = 2
 	super._ready()
 
-func _setup_objectives() -> void:
+func _on_match_start() -> void:
+	_spawn_bots()
+	_shift_zone()
+
+func _spawn_bots() -> void:
+	var bot_scene := load(BOT_SCENE) as PackedScene
+	if not bot_scene:
+		return
+	var half := BOT_COUNT / 2
+	for i in BOT_COUNT:
+		var bot := bot_scene.instantiate() as BotPlayer
+		bot.peer_id = -(i + 1)
+		bot.team_id = 0 if i < half else 1
+		bot.name = str(bot.peer_id)
+		GameManager.players_root.add_child(bot)
+		bot.global_position = _get_team_spawn(bot.team_id)
+
+func _get_team_spawn(team_id: int) -> Vector3:
 	if not _map:
-		return
-	var obj_root := _map.get_node_or_null("ObjectivePoints")
-	if not obj_root:
-		return
-	var zone_id := 0
-	for child in obj_root.get_children():
-		if child.is_in_group("capture_zone") and child is Area3D:
-			var zone := ZoneState.new()
-			zone.zone_id = zone_id
-			zones.append(zone)
-			child.set_meta("zone_id", zone_id)
-			child.body_entered.connect(_on_body_entered_zone.bind(zone_id))
-			child.body_exited.connect(_on_body_exited_zone.bind(zone_id))
-			zone_id += 1
+		return Vector3((1 - team_id * 2) * 12.0, 4, 0)
+	var spawn_node := _map.get_node_or_null("SpawnPoints_Team%d" % team_id)
+	if spawn_node and spawn_node.get_child_count() > 0:
+		var markers := spawn_node.get_children()
+		return markers[randi() % markers.size()].global_position + Vector3.UP
+	return Vector3((1 - team_id * 2) * 12.0, 4, 0)
 
-func _on_body_entered_zone(body: Node, zone_id: int) -> void:
-	if not body is Player:
-		return
-	var p := body as Player
-	if zone_id < zones.size():
-		zones[zone_id].players_in_zone[p.peer_id] = p.team_id
+func get_spawn_position(peer_id: int) -> Vector3:
+	return _get_team_spawn(0 if peer_id >= 0 else 1)
 
-func _on_body_exited_zone(body: Node, zone_id: int) -> void:
-	if not body is Player:
-		return
-	var p := body as Player
-	if zone_id < zones.size():
-		zones[zone_id].players_in_zone.erase(p.peer_id)
+func _shift_zone() -> void:
+	var idx := randi() % ZONE_POSITIONS.size()
+	zone_pos = ZONE_POSITIONS[idx]
+	_shift_timer = ZONE_SHIFT_INTERVAL
+	_update_zone_marker()
+	_sync_zone.rpc(zone_pos)
+
+func _update_zone_marker() -> void:
+	if _zone_marker and is_instance_valid(_zone_marker):
+		_zone_marker.queue_free()
+	_zone_marker = Node3D.new()
+	get_tree().root.add_child(_zone_marker)
+	_zone_marker.global_position = zone_pos
+	# Pulsing ring drawn via MeshInstance3D
+	var ring := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = ZONE_RADIUS - 0.4
+	torus.outer_radius = ZONE_RADIUS
+	torus.rings = 32
+	torus.ring_segments = 8
+	ring.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.9, 0.1, 0.9)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.8, 0.0, 1)
+	mat.emission_energy_multiplier = 2.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring.material_override = mat
+	_zone_marker.add_child(ring)
 
 func _process(delta: float) -> void:
 	super._process(delta)
 	if match_state != MatchState.ACTIVE:
 		return
-	_update_zone_capture(delta)
+
+	_shift_timer -= delta
+	if _shift_timer <= 0:
+		_shift_zone()
+
 	_score_timer += delta
-	if _score_timer >= SCORE_INTERVAL:
+	if _score_timer >= SCORE_TICK_INTERVAL:
 		_score_timer = 0.0
-		_tick_zone_scores()
+		_tick_zone_score()
 
-func _update_zone_capture(delta: float) -> void:
-	for zone in zones:
-		var team_counts: Dictionary = {}
-		for pid in zone.players_in_zone:
-			var t: int = zone.players_in_zone[pid]
-			team_counts[t] = team_counts.get(t, 0) + 1
+	# Pulse zone marker
+	if _zone_marker and is_instance_valid(_zone_marker):
+		var s := 1.0 + 0.06 * sin(Time.get_ticks_msec() * 0.004)
+		_zone_marker.scale = Vector3(s, 1.0, s)
 
-		var dominant_team := -1
-		var dominant_count := 0
-		var contested := false
-		for t in team_counts:
-			if team_counts[t] > dominant_count:
-				dominant_count = team_counts[t]
-				dominant_team = t
-				contested = false
-			elif team_counts[t] == dominant_count:
-				contested = true
-
-		if contested or dominant_team == -1:
+func _tick_zone_score() -> void:
+	var counts := [0, 0]
+	for node in GameManager.get_all_player_nodes():
+		if not node is Player:
 			continue
-
-		if zone.controlling_team == dominant_team:
+		var p := node as Player
+		if not p.is_alive:
 			continue
+		var flat_dist := Vector2(p.global_position.x - zone_pos.x, p.global_position.z - zone_pos.z).length()
+		if flat_dist <= ZONE_RADIUS and p.team_id >= 0 and p.team_id < 2:
+			counts[p.team_id] += 1
+	# Only the dominant team (non-contested) scores
+	if counts[0] > counts[1]:
+		_add_score(0, 2)
+	elif counts[1] > counts[0]:
+		_add_score(1, 2)
 
-		if zone.capturing_team != dominant_team:
-			zone.capturing_team = dominant_team
-			zone.capture_progress = 0.0
-
-		zone.capture_progress += CAPTURE_RATE * delta * dominant_count
-		EventBus.zone_progress_changed.emit(zone.zone_id, dominant_team, zone.capture_progress)
-
-		if zone.capture_progress >= 1.0:
-			zone.controlling_team = dominant_team
-			zone.capturing_team = -1
-			zone.capture_progress = 0.0
-			EventBus.zone_captured.emit(zone.zone_id, dominant_team)
-			EconomyManager.server_add_coins(dominant_team, coins_per_objective)
-			_sync_zone_captured.rpc(zone.zone_id, dominant_team)
-
-func _tick_zone_scores() -> void:
-	var zone_counts: Array = []
-	zone_counts.resize(team_count)
-	zone_counts.fill(0)
-	for zone in zones:
-		if zone.controlling_team >= 0 and zone.controlling_team < team_count:
-			zone_counts[zone.controlling_team] += 1
-	for t in team_count:
-		if zone_counts[t] > 0:
-			_add_score(t, zone_counts[t] * SCORE_PER_ZONE)
+func _on_player_killed(victim_id: int, killer_id: int, _weapon_id: String) -> void:
+	super._on_player_killed(victim_id, killer_id, _weapon_id)
+	if killer_id == victim_id:
+		return
+	var victim_node = GameManager.get_player_node(victim_id)
+	if victim_node:
+		_add_score(1 - (victim_node.team_id as int), 1)
 
 func _check_win_condition() -> void:
 	for i in team_count:
 		if team_scores[i] >= score_limit:
+			if i == 0:
+				var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
+				SettingsManager.set_setting("cosmetic_points", pts + 750)
 			GameManager.end_match(i)
 			return
 
 @rpc("authority", "call_local", "reliable")
-func _sync_zone_captured(zone_id: int, team_id: int) -> void:
-	EventBus.zone_captured.emit(zone_id, team_id)
+func _sync_zone(pos: Vector3) -> void:
+	zone_pos = pos
+	_update_zone_marker()

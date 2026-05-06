@@ -350,6 +350,10 @@ func _on_close() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	EventBus.shop_close_requested.emit()
 
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("open_shop") or Input.is_action_just_pressed("ui_cancel"):
+		_on_close()
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_just_pressed("open_shop") or event.is_action_just_pressed("ui_cancel"):
 		_on_close()

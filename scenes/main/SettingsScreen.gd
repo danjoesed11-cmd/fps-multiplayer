@@ -3,6 +3,7 @@ extends CanvasLayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 20
 	_build_ui()
 
 func _build_ui() -> void:

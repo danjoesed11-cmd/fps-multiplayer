@@ -71,7 +71,7 @@ mouse_filter = 2
 anchors_preset = 15
 
 [node name="Panel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(440, 0)
+custom_minimum_size = Vector2(540, 0)
 theme_override_styles/panel = SubResource("StyleBox_glass")
 
 [node name="VBox" type="VBoxContainer" parent="CenterContainer/Panel"]
@@ -135,7 +135,7 @@ theme_override_font_sizes/font_size = 14
 [node name="SurvivalButton" type="Button" parent="CenterContainer/Panel/VBox/AIRow1"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
-text = "🛡️  Survival"
+text = "💀  Elimination"
 custom_minimum_size = Vector2(0, 46)
 theme_override_font_sizes/font_size = 14
 
