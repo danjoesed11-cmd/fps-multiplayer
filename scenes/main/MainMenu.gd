@@ -26,40 +26,45 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
-	# Root: horizontal split — left play panel, right skins panel
+	# Full-screen horizontal split
 	var hbox := HBoxContainer.new()
-	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hbox.add_theme_constant_override("separation", 0)
 	add_child(hbox)
+	# Set anchors AFTER add_child so parent rect is known
+	hbox.anchor_left   = 0.0
+	hbox.anchor_top    = 0.0
+	hbox.anchor_right  = 1.0
+	hbox.anchor_bottom = 1.0
+	hbox.offset_left   = 0
+	hbox.offset_top    = 0
+	hbox.offset_right  = 0
+	hbox.offset_bottom = 0
 
 	_build_left_panel(hbox)
 	_build_right_panel(hbox)
 
-func _panel_style(bg: Color) -> StyleBoxFlat:
+func _panel_bg(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
-	sb.content_margin_left = 36
-	sb.content_margin_right = 36
-	sb.content_margin_top = 32
+	sb.content_margin_left   = 36
+	sb.content_margin_right  = 36
+	sb.content_margin_top    = 32
 	sb.content_margin_bottom = 32
 	return sb
 
 func _build_left_panel(parent: HBoxContainer) -> void:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	panel.size_flags_stretch_ratio = 0.45
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.04, 0.01, 0.14, 0.94)))
+	panel.add_theme_stylebox_override("panel", _panel_bg(Color(0.04, 0.01, 0.14, 0.94)))
 	parent.add_child(panel)
-
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
 
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 10)
-	scroll.add_child(vbox)
+	panel.add_child(vbox)
 
 	# Title
 	var title := Label.new()
@@ -80,7 +85,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	tag.add_theme_color_override("font_color", Color(1, 1, 1, 0.45))
 	vbox.add_child(tag)
 
-	vbox.add_child(_separator())
+	vbox.add_child(_sep())
 
 	# Name input
 	_name_input = LineEdit.new()
@@ -90,9 +95,8 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_name_input)
 	vbox.add_child(_name_input)
 
-	vbox.add_child(_divider_label("PLAY vs AI"))
+	vbox.add_child(_divider("PLAY vs AI"))
 
-	# Mode buttons
 	var row1 := HBoxContainer.new()
 	row1.add_theme_constant_override("separation", 8)
 	vbox.add_child(row1)
@@ -108,7 +112,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	zone_btn.pressed.connect(func(): _start_ai("zone_wars"))
 	vbox.add_child(zone_btn)
 
-	vbox.add_child(_divider_label("LAN MULTIPLAYER"))
+	vbox.add_child(_divider("LAN MULTIPLAYER"))
 
 	var ip_row := HBoxContainer.new()
 	ip_row.add_theme_constant_override("separation", 8)
@@ -126,7 +130,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_port_input)
 	ip_row.add_child(_port_input)
 
-	var join_btn := _solid_btn("JOIN LAN GAME", Color(0.15, 0.50, 1.0))
+	var join_btn := _mode_btn("JOIN LAN GAME", Color(0.15, 0.50, 1.0))
 	join_btn.pressed.connect(_on_join)
 	vbox.add_child(join_btn)
 
@@ -137,7 +141,12 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status_label)
 
-	vbox.add_child(_separator())
+	# Spacer to push settings/quit to bottom
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(spacer)
+
+	vbox.add_child(_sep())
 
 	var bot_row := HBoxContainer.new()
 	bot_row.add_theme_constant_override("separation", 8)
@@ -164,26 +173,23 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 func _build_right_panel(parent: HBoxContainer) -> void:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 	panel.size_flags_stretch_ratio = 0.55
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.03, 0.00, 0.10, 0.96)))
+	panel.add_theme_stylebox_override("panel", _panel_bg(Color(0.03, 0.00, 0.10, 0.96)))
 	parent.add_child(panel)
 
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
-
-	var vbox := VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 12)
-	scroll.add_child(vbox)
+	var outer := VBoxContainer.new()
+	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	outer.add_theme_constant_override("separation", 12)
+	panel.add_child(outer)
 
 	var title := Label.new()
 	title.text = "CUSTOMIZE"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.5, 0.9, 1.0, 1))
-	vbox.add_child(title)
+	outer.add_child(title)
 
 	var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
 	var pts_lbl := Label.new()
@@ -191,18 +197,28 @@ func _build_right_panel(parent: HBoxContainer) -> void:
 	pts_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pts_lbl.add_theme_font_size_override("font_size", 12)
 	pts_lbl.add_theme_color_override("font_color", Color(1, 0.9, 0.2, 0.85))
-	vbox.add_child(pts_lbl)
+	outer.add_child(pts_lbl)
 
 	_skin_feedback = Label.new()
 	_skin_feedback.text = ""
 	_skin_feedback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_skin_feedback.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(_skin_feedback)
+	outer.add_child(_skin_feedback)
 
-	vbox.add_child(_separator())
+	outer.add_child(_sep())
 
-	var slots := [["body", "Body Skin"], ["head", "Headgear"], ["kill_fx", "Kill Effect"]]
-	for slot_info in slots:
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	outer.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 12)
+	scroll.add_child(vbox)
+
+	for slot_info in [["body", "Body Skin"], ["head", "Headgear"], ["kill_fx", "Kill Effect"]]:
 		var slot: String = slot_info[0]
 		var slot_label: String = slot_info[1]
 
@@ -226,7 +242,6 @@ func _build_right_panel(parent: HBoxContainer) -> void:
 			none_lbl.add_theme_font_size_override("font_size", 11)
 			vbox.add_child(none_lbl)
 		else:
-			# Grid of skin cards: 2 per row
 			var grid := GridContainer.new()
 			grid.columns = 2
 			grid.add_theme_constant_override("h_separation", 8)
@@ -250,13 +265,13 @@ func _skin_card(slot: String, item_id: String, data: Dictionary, is_equipped: bo
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.15, 0.45, 0.85, 0.25) if is_equipped else Color(0.08, 0.08, 0.18, 0.85)
-	sb.border_width_left = 2; sb.border_width_right = 2
-	sb.border_width_top = 2; sb.border_width_bottom = 2
+	sb.border_width_left   = 2; sb.border_width_right  = 2
+	sb.border_width_top    = 2; sb.border_width_bottom = 2
 	sb.border_color = Color(0.3, 0.9, 1.0, 0.8) if is_equipped else Color(1, 1, 1, 0.1)
-	sb.corner_radius_top_left = 8; sb.corner_radius_top_right = 8
-	sb.corner_radius_bottom_left = 8; sb.corner_radius_bottom_right = 8
-	sb.content_margin_left = 10; sb.content_margin_right = 10
-	sb.content_margin_top = 8; sb.content_margin_bottom = 8
+	sb.corner_radius_top_left     = 8; sb.corner_radius_top_right    = 8
+	sb.corner_radius_bottom_left  = 8; sb.corner_radius_bottom_right = 8
+	sb.content_margin_left  = 10; sb.content_margin_right  = 10
+	sb.content_margin_top   = 8;  sb.content_margin_bottom = 8
 	card.add_theme_stylebox_override("panel", sb)
 
 	var vb := VBoxContainer.new()
@@ -303,7 +318,6 @@ func _on_equip(slot: String, item_id: String, cost: int, pts_lbl: Label) -> void
 	_skin_feedback.text = "Equipped!"
 	_skin_feedback.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 	pts_lbl.text = "%d pts  (earn 500+ pts per match win)" % SettingsManager.get_setting("cosmetic_points", 0)
-	# Refresh the whole UI to reflect new equipped state
 	for child in get_children():
 		child.queue_free()
 	_build_ui()
@@ -319,16 +333,11 @@ func _mode_btn(label: String, color: Color) -> Button:
 	for state in [["normal", color], ["hover", color.lightened(0.15)], ["pressed", color.darkened(0.1)]]:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = state[1]
-		sb.corner_radius_top_left = 12; sb.corner_radius_top_right = 12
-		sb.corner_radius_bottom_left = 12; sb.corner_radius_bottom_right = 12
+		sb.corner_radius_top_left    = 12; sb.corner_radius_top_right   = 12
+		sb.corner_radius_bottom_left = 12; sb.corner_radius_bottom_right= 12
 		btn.add_theme_stylebox_override(state[0], sb)
 	btn.add_theme_color_override("font_color", Color(1, 1, 1))
 	btn.add_theme_color_override("font_hover_color", Color(1, 1, 1))
-	return btn
-
-func _solid_btn(label: String, color: Color) -> Button:
-	var btn := _mode_btn(label, color)
-	btn.custom_minimum_size = Vector2(0, 44)
 	return btn
 
 func _style_equip_btn(btn: Button, active: bool) -> void:
@@ -336,7 +345,7 @@ func _style_equip_btn(btn: Button, active: bool) -> void:
 	for state in [["normal", col], ["hover", col.lightened(0.1)], ["pressed", col.darkened(0.1)]]:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = state[1]
-		sb.corner_radius_top_left = 6; sb.corner_radius_top_right = 6
+		sb.corner_radius_top_left    = 6; sb.corner_radius_top_right    = 6
 		sb.corner_radius_bottom_left = 6; sb.corner_radius_bottom_right = 6
 		btn.add_theme_stylebox_override(state[0], sb)
 	btn.add_theme_color_override("font_color", Color(1, 1, 1))
@@ -345,12 +354,12 @@ func _style_equip_btn(btn: Button, active: bool) -> void:
 func _style_input(input: LineEdit) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(1, 1, 1, 0.08)
-	sb.border_width_left = 2; sb.border_width_top = 2
-	sb.border_width_right = 2; sb.border_width_bottom = 2
+	sb.border_width_left   = 2; sb.border_width_top    = 2
+	sb.border_width_right  = 2; sb.border_width_bottom = 2
 	sb.border_color = Color(1, 1, 1, 0.22)
-	sb.corner_radius_top_left = 10; sb.corner_radius_top_right = 10
+	sb.corner_radius_top_left    = 10; sb.corner_radius_top_right    = 10
 	sb.corner_radius_bottom_left = 10; sb.corner_radius_bottom_right = 10
-	sb.content_margin_left = 14; sb.content_margin_top = 10
+	sb.content_margin_left  = 14; sb.content_margin_top    = 10
 	sb.content_margin_right = 14; sb.content_margin_bottom = 10
 	input.add_theme_stylebox_override("normal", sb)
 	input.add_theme_stylebox_override("focus", sb)
@@ -358,12 +367,12 @@ func _style_input(input: LineEdit) -> void:
 	input.add_theme_color_override("font_placeholder_color", Color(1, 1, 1, 0.35))
 	input.add_theme_font_size_override("font_size", 14)
 
-func _separator() -> HSeparator:
+func _sep() -> HSeparator:
 	var sep := HSeparator.new()
 	sep.modulate.a = 0.25
 	return sep
 
-func _divider_label(text: String) -> HBoxContainer:
+func _divider(text: String) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
 	var l1 := HSeparator.new()
