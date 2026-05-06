@@ -26,12 +26,12 @@ func _spawn_bots() -> void:
 	# First half go on team 0 (friendly), second half on team 1 (enemy)
 	var friendly_count := BOT_COUNT / 2
 	for i in BOT_COUNT:
-		var bot := bot_scene.instantiate() as BotPlayer
-		bot.peer_id = -(i + 1)
-		bot.team_id = 0 if i < friendly_count else 1
-		bot.name = str(bot.peer_id)
+		var bot: Node = bot_scene.instantiate()
+		bot.set("peer_id", -(i + 1))
+		bot.set("team_id", 0 if i < friendly_count else 1)
+		bot.name = str(-(i + 1))
 		GameManager.players_root.add_child(bot)
-		bot.global_position = _get_team_spawn(bot.team_id)
+		bot.set("global_position", _get_team_spawn(0 if i < friendly_count else 1))
 
 func _get_team_spawn(team_id: int) -> Vector3:
 	if not _map:
