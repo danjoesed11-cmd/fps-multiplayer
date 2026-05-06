@@ -10,6 +10,7 @@ var upgrade_level: int = 0
 var _fire_cooldown: float = 0.0
 var _owner_id: int = 0
 var _is_local: bool = false
+var _fire_fx_handled: bool = false
 
 var _damage: float = 25.0
 var _fire_rate: float = 0.12
@@ -67,10 +68,12 @@ func attempt_fire() -> void:
 
 	var muzzle_pos := muzzle_point.global_position if muzzle_point else global_position
 	_last_hit_pos = muzzle_pos + (-global_transform.basis.z * _get_stat("range"))
+	_fire_fx_handled = false
 	_execute_fire()
 
-	var paint_color := PAINTBALL_COLORS[randi() % PAINTBALL_COLORS.size()]
-	rpc_play_fire_fx.rpc(_last_hit_pos, paint_color)
+	if not _fire_fx_handled:
+		var paint_color := PAINTBALL_COLORS[randi() % PAINTBALL_COLORS.size()]
+		rpc_play_fire_fx.rpc(_last_hit_pos, paint_color)
 	fired.emit()
 
 func _execute_fire() -> void:
@@ -126,10 +129,13 @@ func _projectile_fire(_cam: Camera3D) -> void:
 	pass
 
 func reload() -> void:
-	if is_reloading or reserve_ammo <= 0:
+	if is_reloading or current_ammo == _get_stat("magazine") as int:
 		return
-	if current_ammo == _get_stat("magazine") as int:
-		return
+	if reserve_ammo <= 0:
+		if _owner_id < 0:
+			reserve_ammo = _get_stat("magazine") as int * 10
+		else:
+			return
 	is_reloading = true
 	if animation_player and animation_player.has_animation("reload"):
 		animation_player.play("reload")
@@ -138,10 +144,14 @@ func reload() -> void:
 
 func _finish_reload() -> void:
 	var mag := _get_stat("magazine") as int
-	var needed := mag - current_ammo
-	var take := mini(needed, reserve_ammo)
-	current_ammo += take
-	reserve_ammo -= take
+	if _owner_id < 0:
+		current_ammo = mag
+		reserve_ammo = mag * 10
+	else:
+		var needed := mag - current_ammo
+		var take := mini(needed, reserve_ammo)
+		current_ammo += take
+		reserve_ammo -= take
 	is_reloading = false
 	ammo_changed.emit(current_ammo, reserve_ammo)
 	EventBus.ammo_changed.emit(_owner_id, current_ammo, reserve_ammo)

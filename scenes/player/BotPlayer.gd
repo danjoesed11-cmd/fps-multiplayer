@@ -9,7 +9,7 @@ const BOT_SPEED        := 3.0
 const ENEMY_FIRE_INTERVAL   := 0.9    # extra delay between shots for enemy bots
 const FRIENDLY_FIRE_INTERVAL := 0.4
 const ENEMY_DAMAGE_MULT     := 0.42   # enemy bots deal 42% of normal weapon damage
-const HIT_IMMUNITY_SECS     := 0.65   # seconds enemy bots are immune after being hit
+const HIT_IMMUNITY_SECS     := 0.15   # seconds enemy bots are immune after being hit
 
 var _target: Player = null
 var _think_timer: float = 0.0
@@ -157,15 +157,25 @@ func _smart_move(delta: float) -> void:
 			var strafe := to_target.cross(Vector3.UP) * _strafe_dir
 			move_dir = (move_dir + strafe * 0.8).normalized()
 	else:
-		# Wander to random destination
-		var to_wander := _wander_target - global_position
-		to_wander.y = 0
-		if to_wander.length() < 2.0:
-			_wander_target = global_position + Vector3(
-				randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
-				randf_range(-WANDER_RANGE, WANDER_RANGE))
+		# Seek zone/objective if the game mode has one, otherwise wander
+		var obj_pos := _get_objective_position()
+		if obj_pos != Vector3.ZERO:
+			var to_obj := obj_pos - global_position
+			to_obj.y = 0
+			if to_obj.length() > 2.5:
+				move_dir = to_obj.normalized()
+			else:
+				# Already at objective — strafe slowly
+				move_dir = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
 		else:
-			move_dir = to_wander.normalized()
+			var to_wander := _wander_target - global_position
+			to_wander.y = 0
+			if to_wander.length() < 2.0:
+				_wander_target = global_position + Vector3(
+					randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
+					randf_range(-WANDER_RANGE, WANDER_RANGE))
+			else:
+				move_dir = to_wander.normalized()
 
 	# Wall avoidance — cast short ray forward, slide off wall normal
 	if move_dir.length() > 0.1:
@@ -194,6 +204,15 @@ func _smart_move(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, BOT_SPEED)
 		velocity.z = move_toward(velocity.z, 0, BOT_SPEED)
+
+func _get_objective_position() -> Vector3:
+	var mode := GameManager.current_mode_node
+	if not mode:
+		return Vector3.ZERO
+	var zp = mode.get("zone_pos")
+	if zp is Vector3:
+		return zp
+	return Vector3.ZERO
 
 func _aim_at_target() -> void:
 	if not _target:

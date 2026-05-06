@@ -73,22 +73,44 @@ func _update_zone_marker() -> void:
 	_zone_marker = Node3D.new()
 	get_tree().root.add_child(_zone_marker)
 	_zone_marker.global_position = zone_pos
+
+	# Ground ring — solid border players can see at floor level
 	var ring := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = ZONE_RADIUS
 	cyl.bottom_radius = ZONE_RADIUS
-	cyl.height = 0.25
-	cyl.radial_segments = 32
+	cyl.height = 0.3
+	cyl.radial_segments = 48
 	ring.mesh = cyl
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.9, 0.1, 0.7)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.8, 0.0, 1)
-	mat.emission_energy_multiplier = 3.0
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	ring.material_override = mat
+	var ring_mat := StandardMaterial3D.new()
+	ring_mat.albedo_color = Color(1.0, 0.9, 0.1, 0.85)
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color(1.0, 0.8, 0.0)
+	ring_mat.emission_energy_multiplier = 4.0
+	ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ring.material_override = ring_mat
 	_zone_marker.add_child(ring)
+
+	# Tall semi-transparent beam so the zone is visible from across the map
+	var beam := MeshInstance3D.new()
+	var beam_cyl := CylinderMesh.new()
+	beam_cyl.top_radius = ZONE_RADIUS
+	beam_cyl.bottom_radius = ZONE_RADIUS
+	beam_cyl.height = 40.0
+	beam_cyl.radial_segments = 32
+	beam.mesh = beam_cyl
+	var beam_mat := StandardMaterial3D.new()
+	beam_mat.albedo_color = Color(1.0, 0.9, 0.1, 0.07)
+	beam_mat.emission_enabled = true
+	beam_mat.emission = Color(1.0, 0.8, 0.0)
+	beam_mat.emission_energy_multiplier = 2.0
+	beam_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	beam_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	beam_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	beam.material_override = beam_mat
+	beam.position.y = 20.0
+	_zone_marker.add_child(beam)
 
 func _process(delta: float) -> void:
 	super._process(delta)

@@ -166,7 +166,10 @@ func _die(killer_id: int, weapon_id: String) -> void:
 
 	await get_tree().create_timer(3.0).timeout
 	if multiplayer.is_server():
-		GameManager.respawn_player(peer_id)
+		var mode := GameManager.current_mode_node
+		var blocked: bool = mode != null and mode.has_method("prevents_respawn") and mode.prevents_respawn()
+		if not blocked:
+			GameManager.respawn_player(peer_id)
 
 func server_respawn(spawn_position: Vector3) -> void:
 	if not multiplayer.is_server():
@@ -184,6 +187,7 @@ func _sync_health(new_health: float) -> void:
 func _sync_death(killer_id: int, weapon_id: String) -> void:
 	is_alive = false
 	_spawn_death_fx(global_position)
+	hide()
 	if is_multiplayer_authority():
 		_on_local_death()
 
@@ -294,6 +298,7 @@ func _force_respawn(spawn_pos: Vector3) -> void:
 	is_alive = true
 	health = max_health
 	global_position = spawn_pos
+	show()
 	_invincible_timer = RESPAWN_INVINCIBLE_TIME
 	if is_multiplayer_authority():
 		weapon_manager.reset_weapons()

@@ -108,6 +108,9 @@ func _end_round(winning_team: int) -> void:
 func _check_win_condition() -> void:
 	pass
 
+func prevents_respawn() -> bool:
+	return _round_active
+
 @rpc("authority", "call_local", "reliable")
 func _sync_round_start(counts: Array, wins: Array) -> void:
 	alive_counts.assign(counts)
