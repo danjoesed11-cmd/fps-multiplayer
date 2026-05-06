@@ -17,7 +17,7 @@ func _process(delta: float) -> void:
 		if _scoped:
 			_exit_scope()
 		return
-	var aiming := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) \
+	var aiming := (Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_key_pressed(KEY_4)) \
 		and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
 	if aiming and not _scoped:
 		_enter_scope()
