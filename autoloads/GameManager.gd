@@ -115,7 +115,7 @@ func _spawn_player(peer_id: int) -> void:
 	if current_mode_node and current_mode_node.has_method("get_spawn_position"):
 		spawn_pos = current_mode_node.get_spawn_position(peer_id)
 	player.global_position = spawn_pos
-	EconomyManager.init_player(peer_id, 0)
+	EconomyManager.init_player(peer_id, 500)
 
 func respawn_player(peer_id: int) -> void:
 	if not multiplayer.is_server():

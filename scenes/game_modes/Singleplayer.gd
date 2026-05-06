@@ -2,7 +2,7 @@ class_name Singleplayer
 extends GameModeBase
 
 const BOT_SCENE := "res://scenes/player/BotPlayer.tscn"
-const BOT_COUNT := 4
+const BOT_COUNT := 6
 
 # Set before begin_match() to change rules
 var variant: String = "survival"  # "survival" or "tdm"
@@ -22,13 +22,15 @@ func _spawn_bots() -> void:
 	if not bot_scene:
 		push_error("BotPlayer scene not found")
 		return
+	# First half go on team 0 (friendly), second half on team 1 (enemy)
+	var friendly_count := BOT_COUNT / 2
 	for i in BOT_COUNT:
 		var bot := bot_scene.instantiate() as BotPlayer
 		bot.peer_id = -(i + 1)
-		bot.team_id = 1
-		bot.name = str(bot.peer_id)  # required for GameManager.get_player_node()
+		bot.team_id = 0 if i < friendly_count else 1
+		bot.name = str(bot.peer_id)
 		GameManager.players_root.add_child(bot)
-		bot.global_position = _get_team_spawn(1)
+		bot.global_position = _get_team_spawn(bot.team_id)
 
 func _get_team_spawn(team_id: int) -> Vector3:
 	if not _map:
@@ -47,11 +49,15 @@ func get_spawn_position(peer_id: int) -> Vector3:
 
 func _on_player_killed(victim_id: int, killer_id: int, weapon_id: String) -> void:
 	super._on_player_killed(victim_id, killer_id, weapon_id)
-	# victim < 0 = bot killed, killer > 0 = player killed bot → player scores
-	if victim_id < 0 and killer_id > 0:
+	# Score based on which team the victim was on
+	var victim_node = GameManager.get_player_node(victim_id)
+	if not victim_node:
+		return
+	var victim_team: int = victim_node.team_id
+	# Killing an enemy team 1 member scores for team 0, and vice versa
+	if victim_team == 1:
 		_add_score(0, 1)
-	# victim > 0 = player killed, killer < 0 = bot killed player → bots score
-	elif victim_id > 0 and killer_id < 0:
+	elif victim_team == 0:
 		_add_score(1, 1)
 
 func _check_win_condition() -> void:

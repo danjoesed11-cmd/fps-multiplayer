@@ -62,6 +62,10 @@ func _process(delta: float) -> void:
 	var captured := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
 	click_to_play.visible = not captured
 
+	if Input.is_action_just_pressed("open_shop"):
+		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+			EventBus.shop_open_requested.emit()
+
 	if Input.is_action_just_pressed("scoreboard"):
 		scoreboard.show()
 	elif Input.is_action_just_released("scoreboard"):

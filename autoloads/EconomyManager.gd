@@ -33,8 +33,10 @@ func server_deduct_coins(peer_id: int, amount: int) -> bool:
 	return true
 
 func init_player(peer_id: int, starting_coins: int = 0) -> void:
-	if multiplayer.is_server():
+	if multiplayer.is_server() or multiplayer.get_unique_id() == 1:
 		_ledger[peer_id] = starting_coins
+		_client_coin_cache = starting_coins
+		EventBus.coins_changed.emit(peer_id, starting_coins)
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_ledger.erase(peer_id)
