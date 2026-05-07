@@ -15,13 +15,23 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_load_catalog()
-	# Deferred so the viewport/parent rect is fully resolved before we size the UI
+	_add_waffle_button()
 	call_deferred("_build_ui")
-	get_viewport().size_changed.connect(_on_viewport_resized)
 
-func _on_viewport_resized() -> void:
-	if _root_hbox and is_instance_valid(_root_hbox):
-		_root_hbox.size = get_viewport().get_visible_rect().size
+func _add_waffle_button() -> void:
+	var btn := Button.new()
+	btn.text = "Did you eat toaster waffles today?"
+	btn.flat = true
+	btn.set_anchor_and_offset(SIDE_LEFT,   1.0, -360)
+	btn.set_anchor_and_offset(SIDE_RIGHT,  1.0,  -8)
+	btn.set_anchor_and_offset(SIDE_TOP,    0.0,   8)
+	btn.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  34)
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
+	btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
+	btn.z_index = 10
+	btn.pressed.connect(_open_waffle)
+	add_child(btn)
 
 func _load_catalog() -> void:
 	var file := FileAccess.open(CHARACTER_CATALOG_PATH, FileAccess.READ)
@@ -33,17 +43,13 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
-	var vp_size := get_viewport().get_visible_rect().size
 	_root_hbox = HBoxContainer.new()
 	_root_hbox.add_theme_constant_override("separation", 0)
-	_root_hbox.position = Vector2.ZERO
-	_root_hbox.size = vp_size
+	_root_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root_hbox)
 
 	_build_left_panel(_root_hbox)
 	_build_right_panel(_root_hbox)
-	_build_waffle_link()
-	_build_top_account_bar()
 
 func _panel_bg(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -411,6 +417,15 @@ func _build_account_bar() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 
+	if not is_instance_valid(AccountManager) or AccountManager == null:
+		var lbl := Label.new()
+		lbl.text = "Playing as guest"
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
+		row.add_child(lbl)
+		return row
+
 	if AccountManager.is_logged_in():
 		var name_lbl := Label.new()
 		name_lbl.text = "Signed in as  %s" % AccountManager.get_username()
@@ -442,27 +457,6 @@ func _build_account_bar() -> HBoxContainer:
 
 	return row
 
-func _build_top_account_bar() -> void:
-	pass  # handled by _build_account_bar inside the panel
-
-func _build_waffle_link() -> void:
-	var cl := CanvasLayer.new()
-	cl.layer = 5
-	add_child(cl)
-
-	# Button goes directly into the CanvasLayer — no full-screen ctrl that blocks clicks
-	var btn := Button.new()
-	btn.text = "Did you eat toaster waffles today?"
-	btn.flat = true
-	btn.set_anchor_and_offset(SIDE_LEFT,   1.0, -360)
-	btn.set_anchor_and_offset(SIDE_RIGHT,  1.0,  -8)
-	btn.set_anchor_and_offset(SIDE_TOP,    0.0,   8)
-	btn.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  34)
-	btn.add_theme_font_size_override("font_size", 11)
-	btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
-	btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
-	btn.pressed.connect(_open_waffle)
-	cl.add_child(btn)
 
 func _open_account() -> void:
 	var panel := load("res://scenes/main/AccountPanel.gd").new()
@@ -484,9 +478,6 @@ func _rebuild() -> void:
 	if _root_hbox and is_instance_valid(_root_hbox):
 		_root_hbox.queue_free()
 		_root_hbox = null
-	for child in get_children():
-		if child is CanvasLayer:
-			child.queue_free()
 	call_deferred("_build_ui")
 
 func _small_btn(text: String, col: Color) -> Button:
