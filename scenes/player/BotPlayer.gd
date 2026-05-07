@@ -1,15 +1,15 @@
 class_name BotPlayer
 extends Player
 
-const THINK_INTERVAL        := 0.10
-const ATTACK_RANGE          := 45.0
-const WANDER_RANGE          := 16.0
-const BOT_SPEED             := 5.5
+const THINK_INTERVAL        := 0.08
+const ATTACK_RANGE          := 55.0
+const WANDER_RANGE          := 20.0
+const BOT_SPEED             := 6.5
 
-const ENEMY_FIRE_INTERVAL   := 0.35
-const FRIENDLY_FIRE_INTERVAL := 0.20
-const ENEMY_DAMAGE_MULT     := 0.70
-const HIT_IMMUNITY_SECS     := 0.08
+const ENEMY_FIRE_INTERVAL   := 0.25
+const FRIENDLY_FIRE_INTERVAL := 0.15
+const ENEMY_DAMAGE_MULT     := 0.80
+const HIT_IMMUNITY_SECS     := 0.06
 
 var _target: Player = null
 var _think_timer: float = 0.0
@@ -23,6 +23,8 @@ var _last_pos: Vector3 = Vector3.ZERO
 var _stuck_timer: float = 0.0
 var _hit_immunity_timer: float = 0.0
 var _jump_timer: float = 0.0
+var _dodge_timer: float = 0.0
+var _flank_angle: float = 0.0
 
 @onready var bot_body: MeshInstance3D = $BotBody
 @onready var bot_head: MeshInstance3D = $BotHead
@@ -36,6 +38,7 @@ func _ready() -> void:
 	_wander_target = global_position + Vector3(
 		randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
 		randf_range(-WANDER_RANGE, WANDER_RANGE))
+	_flank_angle = randf() * TAU
 	weapon_manager.initialize(peer_id, true)
 	_apply_team_colors()
 	if team_id == 1:
@@ -70,6 +73,12 @@ func take_damage(amount: float, attacker_id: int, weapon_id: String) -> void:
 	if team_id == 1 and _hit_immunity_timer > 0:
 		return
 	super.take_damage(amount, attacker_id, weapon_id)
+	if is_alive:
+		# React to being hit: dodge immediately
+		_dodge_timer = 0.7
+		_strafe_dir = -_strafe_dir
+		if is_on_floor():
+			velocity.y = JUMP_VELOCITY * 0.8
 	if team_id == 1 and is_alive:
 		_hit_immunity_timer = HIT_IMMUNITY_SECS
 
@@ -81,6 +90,7 @@ func _physics_process(delta: float) -> void:
 	_bot_fire_timer   -= delta
 	_strafe_timer     -= delta
 	_jump_timer       -= delta
+	_dodge_timer      -= delta
 	if team_id == 1:
 		_hit_immunity_timer -= delta
 
@@ -89,7 +99,8 @@ func _physics_process(delta: float) -> void:
 		_find_target()
 		if _strafe_timer <= 0:
 			_strafe_dir = 1 if randf() > 0.5 else -1
-			_strafe_timer = randf_range(0.5, 1.6)
+			_strafe_timer = randf_range(0.4, 1.2)
+			_flank_angle += randf_range(-0.8, 0.8)
 
 	_handle_gravity(delta)
 	_smart_move(delta)
@@ -100,14 +111,15 @@ func _physics_process(delta: float) -> void:
 		if dist < ATTACK_RANGE:
 			_aim_at_target()
 			_try_fire()
-			# Random jump to become harder to hit
+			# Jump unpredictably — more frequent when being shot at
+			var jump_chance := 0.55 if _dodge_timer > 0 else 0.35
 			if _jump_timer <= 0 and is_on_floor():
-				_jump_timer = randf_range(1.8, 3.5)
-				if randf() < 0.35:
+				_jump_timer = randf_range(1.2, 2.8)
+				if randf() < jump_chance:
 					velocity.y = JUMP_VELOCITY
 
 func _find_target() -> void:
-	var best_dist := INF
+	var best_score := INF
 	_target = null
 	for node in GameManager.get_all_player_nodes():
 		if not node is Player:
@@ -116,8 +128,11 @@ func _find_target() -> void:
 		if p == self or p.team_id == team_id or not p.is_alive:
 			continue
 		var d := global_position.distance_to(p.global_position)
-		if d < best_dist:
-			best_dist = d
+		# Weight by distance; halve effective distance for low-HP targets
+		var hp_frac: float = p.health / p.max_health
+		var score := d * (0.4 + hp_frac * 0.6)
+		if score < best_score:
+			best_score = score
 			_target = p
 
 func _try_fire() -> void:
@@ -126,8 +141,10 @@ func _try_fire() -> void:
 	var wm: WeaponBase = weapon_manager.get_current_weapon()
 	if wm:
 		wm.attempt_fire()
-	var interval := ENEMY_FIRE_INTERVAL if team_id == 1 else FRIENDLY_FIRE_INTERVAL
-	_bot_fire_timer = interval
+	# Fire faster when target is low HP or when dodging
+	var fast := _target != null and ((_target.health / _target.max_health) < 0.35 or _dodge_timer > 0)
+	var base_interval := ENEMY_FIRE_INTERVAL if team_id == 1 else FRIENDLY_FIRE_INTERVAL
+	_bot_fire_timer = base_interval * (0.6 if fast else 1.0)
 
 func _smart_move(delta: float) -> void:
 	if _last_pos.distance_to(global_position) < 0.04:
@@ -136,13 +153,14 @@ func _smart_move(delta: float) -> void:
 		_stuck_timer = 0.0
 	_last_pos = global_position
 
-	if _stuck_timer > 0.6:
+	if _stuck_timer > 0.5:
 		_stuck_timer = 0.0
 		if is_on_floor():
-			velocity.y = JUMP_VELOCITY * 0.9
+			velocity.y = JUMP_VELOCITY
+		_flank_angle += PI * 0.5
 		_wander_target = global_position + Vector3(
-			randf_range(-WANDER_RANGE, WANDER_RANGE), 0,
-			randf_range(-WANDER_RANGE, WANDER_RANGE))
+			cos(_flank_angle) * WANDER_RANGE, 0,
+			sin(_flank_angle) * WANDER_RANGE)
 
 	var move_dir := Vector3.ZERO
 
@@ -152,18 +170,26 @@ func _smart_move(delta: float) -> void:
 		flat.y = 0
 		var to_target := flat.normalized()
 
-		var low_hp := health < max_health * 0.25
+		var low_hp := health < max_health * 0.28
 
-		if low_hp and dist < ATTACK_RANGE * 0.5:
-			move_dir = -to_target   # retreat when badly hurt
-		elif dist > ATTACK_RANGE * 0.55:
-			move_dir = to_target    # close in
-		elif dist < ATTACK_RANGE * 0.18:
-			move_dir = -to_target   # back off if too close
-
-		if dist < ATTACK_RANGE:
+		if _dodge_timer > 0:
+			# Pure strafe dodge when recently hit
 			var strafe := to_target.cross(Vector3.UP) * _strafe_dir
-			move_dir = (move_dir + strafe * 1.1).normalized()
+			move_dir = strafe
+		elif low_hp and dist < ATTACK_RANGE * 0.55:
+			# Retreat when badly hurt
+			move_dir = -to_target
+		elif dist > ATTACK_RANGE * 0.5:
+			# Advance with flanking arc
+			var flank := Vector3(cos(_flank_angle), 0, sin(_flank_angle))
+			move_dir = (to_target * 0.7 + flank * 0.3).normalized()
+		elif dist < ATTACK_RANGE * 0.15:
+			# Too close — back off
+			move_dir = -to_target
+		else:
+			# Strafe orbit at medium range
+			var strafe := to_target.cross(Vector3.UP) * _strafe_dir
+			move_dir = (strafe * 1.2 + to_target * 0.2).normalized()
 	else:
 		var obj_pos := _get_objective_position()
 		if obj_pos != Vector3.ZERO:
@@ -172,7 +198,7 @@ func _smart_move(delta: float) -> void:
 			if to_obj.length() > 2.5:
 				move_dir = to_obj.normalized()
 			else:
-				move_dir = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
+				move_dir = Vector3(cos(_flank_angle), 0, sin(_flank_angle))
 		else:
 			var to_wander := _wander_target - global_position
 			to_wander.y = 0
@@ -199,6 +225,7 @@ func _smart_move(delta: float) -> void:
 					move_dir = slid.normalized()
 				else:
 					_strafe_dir = -_strafe_dir
+					_flank_angle += PI * 0.5
 					move_dir = move_dir.reflect(wall_n).normalized()
 
 	if move_dir.length() > 0.1:
@@ -215,26 +242,39 @@ func _get_objective_position() -> Vector3:
 	var mode := GameManager.current_mode_node
 	if not mode:
 		return Vector3.ZERO
+	# King of the Hill zone
 	var zp = mode.get("zone_pos")
 	if zp is Vector3:
 		return zp
+	# Domination: go to nearest uncontrolled zone
+	if mode.has_method("get_nearest_objective"):
+		var op = mode.call("get_nearest_objective", global_position, team_id)
+		if op is Vector3:
+			return op
 	return Vector3.ZERO
 
 func _aim_at_target() -> void:
 	if not _target:
 		return
 	var aim_pos := _target.global_position + Vector3.UP * 1.3
-	# Lead moving targets based on distance
+
+	# Lead the target based on velocity and range
 	if _target is CharacterBody3D:
 		var vel: Vector3 = (_target as CharacterBody3D).velocity
 		var dist := global_position.distance_to(_target.global_position)
-		aim_pos += vel * (dist / 100.0)
-	# Enemy bots have slight inaccuracy; friendly bots are spot-on
+		# Lead factor scales with distance (closer = less lead needed)
+		var lead_time := dist / 120.0
+		aim_pos += vel * lead_time
+
+	# Enemy bots have slight inaccuracy; scales with distance
 	if team_id == 1:
+		var dist := global_position.distance_to(_target.global_position)
+		var spread := clamp(dist / 600.0, 0.02, 0.10)
 		aim_pos += Vector3(
-			randf_range(-0.12, 0.12),
-			randf_range(-0.08, 0.08),
-			randf_range(-0.12, 0.12))
+			randf_range(-spread, spread),
+			randf_range(-spread * 0.6, spread * 0.6),
+			randf_range(-spread, spread))
+
 	var dir := (aim_pos - camera_mount.global_position).normalized()
 	camera_mount.rotation.x = -asin(clamp(dir.y, -1.0, 1.0))
 	rotation.y = atan2(-dir.x, -dir.z)

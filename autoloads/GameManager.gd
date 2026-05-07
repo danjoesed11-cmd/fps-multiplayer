@@ -9,6 +9,8 @@ const MODE_SCENES: Dictionary = {
 	"zone_wars":    "res://scenes/game_modes/ZoneWars.tscn",
 	"hide_seek":    "res://scenes/game_modes/HideAndSeek.tscn",
 	"wipeout":      "res://scenes/game_modes/TeamWipeout.tscn",
+	"koth":         "res://scenes/game_modes/KingOfTheHill.tscn",
+	"domination":   "res://scenes/game_modes/Domination.tscn",
 }
 
 const MAP_SCENES: Dictionary = {

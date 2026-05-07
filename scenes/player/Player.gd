@@ -4,7 +4,7 @@ extends CharacterBody3D
 const SPEED := 6.0
 const SPRINT_SPEED := 9.0
 const CROUCH_SPEED := 3.0
-const JUMP_VELOCITY := 9.0
+const JUMP_VELOCITY := 14.0
 const GRAVITY := -20.0
 const RESPAWN_INVINCIBLE_TIME := 2.0
 
@@ -21,6 +21,7 @@ var _invincible_timer: float = 0.0
 @onready var weapon_holder: Node3D = $CameraMount/PlayerCamera/WeaponHolder
 @onready var weapon_manager: Node = $WeaponManager
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var player_body: Node3D = $PlayerBody
 var network_sync: MultiplayerSynchronizer = null
 
 var _camera_pitch: float = 0.0
@@ -30,6 +31,13 @@ var _is_sprinting: bool = false
 func _ready() -> void:
 	network_sync = get_node_or_null("NetworkSynchronizer")
 	set_multiplayer_authority(peer_id)
+
+	var info := PlayerRegistry.get_info(peer_id)
+	if info:
+		team_id = info.team_id
+
+	_populate_player_body()
+
 	if is_multiplayer_authority():
 		player_camera.current = true
 		_capture_mouse()
@@ -37,12 +45,43 @@ func _ready() -> void:
 		SettingsManager.setting_changed.connect(_on_setting_changed)
 	else:
 		player_camera.current = false
-
-	var info := PlayerRegistry.get_info(peer_id)
-	if info:
-		team_id = info.team_id
+		player_body.show()
 
 	weapon_manager.initialize(peer_id, is_multiplayer_authority())
+
+func _populate_player_body() -> void:
+	for child in player_body.get_children():
+		child.queue_free()
+
+	var body_color := Color(0.05, 0.25, 0.75) if team_id == 0 else Color(0.85, 0.12, 0.05)
+
+	var torso := MeshInstance3D.new()
+	torso.name = "BodyMesh"
+	var torso_mesh := CapsuleMesh.new()
+	torso_mesh.radius = 0.32
+	torso_mesh.height = 1.55
+	torso.mesh = torso_mesh
+	torso.position = Vector3(0, 0.78, 0)
+	var bmat := StandardMaterial3D.new()
+	bmat.albedo_color = body_color
+	bmat.emission_enabled = true
+	bmat.emission = body_color
+	bmat.emission_energy_multiplier = 0.5
+	torso.material_override = bmat
+	player_body.add_child(torso)
+
+	var head := MeshInstance3D.new()
+	head.name = "HeadMesh"
+	var head_mesh := BoxMesh.new()
+	head_mesh.size = Vector3(0.52, 0.52, 0.52)
+	head.mesh = head_mesh
+	head.position = Vector3(0, 1.72, 0)
+	var hmat := StandardMaterial3D.new()
+	hmat.albedo_color = Color(0.9, 0.75, 0.6)
+	head.material_override = hmat
+	player_body.add_child(head)
+
+	player_body.hide()
 
 func _capture_mouse() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -51,7 +90,7 @@ func _on_setting_changed(key: String, value: Variant) -> void:
 	if key == "camera_mode":
 		_apply_camera_mode(value)
 	elif key == "mouse_sensitivity":
-		pass  # read per-frame via get_sensitivity()
+		pass
 	elif key == "fov":
 		player_camera.fov = float(value)
 
@@ -61,14 +100,17 @@ func _apply_camera_mode(mode: String) -> void:
 			player_camera.position = Vector3.ZERO
 			player_camera.rotation_degrees = Vector3.ZERO
 			weapon_holder.show()
+			player_body.hide()
 		"tps":
-			player_camera.position = Vector3(0, 0.8, 2.8)
-			player_camera.rotation_degrees = Vector3(-8, 0, 0)
+			player_camera.position = Vector3(0, 0.8, 3.2)
+			player_camera.rotation_degrees = Vector3(-20, 0, 0)
 			weapon_holder.hide()
+			player_body.show()
 		"far":
-			player_camera.position = Vector3(0, 1.6, 5.5)
-			player_camera.rotation_degrees = Vector3(-14, 0, 0)
+			player_camera.position = Vector3(0, 1.5, 6.5)
+			player_camera.rotation_degrees = Vector3(-15, 0, 0)
 			weapon_holder.hide()
+			player_body.show()
 
 func _physics_process(delta: float) -> void:
 	if _invincible_timer > 0:
@@ -115,28 +157,26 @@ func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
 		return
 
-	# Escape opens pause menu (handled by HUD)
 	if event.is_action_pressed("pause"):
 		return
 
-	# Any click re-captures the mouse when it was released
 	if event is InputEventMouseButton and event.pressed:
 		if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 			_capture_mouse()
-			return   # don't fire on the recapture click
+			return
 
 	if not is_alive:
 		return
 
-	# V key cycles camera perspective (FPS → TPS → Far → FPS)
+	# V key cycles FPS → TPS → Far → FPS
 	if event is InputEventKey and event.pressed and event.keycode == KEY_V:
 		var modes := ["fps", "tps", "far"]
 		var cur: String = SettingsManager.get_setting("camera_mode", "fps")
 		var idx := modes.find(cur)
 		var next: String = modes[(idx + 1) % modes.size()]
 		SettingsManager.set_setting("camera_mode", next)
+		_apply_camera_mode(next)  # direct call in case signal chain is slow
 
-	# Mouse look — only when captured
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var sens := SettingsManager.get_sensitivity()
 		rotate_y(-event.relative.x * sens)
@@ -196,6 +236,7 @@ func _sync_death(killer_id: int, weapon_id: String) -> void:
 	is_alive = false
 	_spawn_death_fx(global_position)
 	hide()
+	player_body.hide()
 	if is_multiplayer_authority():
 		_on_local_death()
 
@@ -208,7 +249,6 @@ func _spawn_death_fx(pos: Vector3) -> void:
 	root.add_child(fx)
 	fx.global_position = pos + Vector3.UP * 0.8
 
-	# Flash burst: bright white expanding sphere
 	var flash := MeshInstance3D.new()
 	flash.mesh = SphereMesh.new()
 	(flash.mesh as SphereMesh).radius = 0.5
@@ -223,7 +263,6 @@ func _spawn_death_fx(pos: Vector3) -> void:
 	flash.material_override = flash_mat
 	fx.add_child(flash)
 
-	# Spinning star burst particles
 	var star_colors: Array[Color] = [Color(1, 0.2, 0.8), Color(0.2, 1.0, 0.4), Color(1, 0.9, 0.1), Color(0.3, 0.8, 1.0)]
 	for i in 8:
 		var star := MeshInstance3D.new()
@@ -250,7 +289,6 @@ func _spawn_death_fx(pos: Vector3) -> void:
 		tw.parallel().tween_property(smat, "albedo_color:a", 0.0, 0.5)
 		tw.tween_callback(star.queue_free)
 
-	# Bone cross slashes (X shape)
 	for i in 3:
 		var bone := MeshInstance3D.new()
 		root.add_child(bone)
@@ -273,7 +311,6 @@ func _spawn_death_fx(pos: Vector3) -> void:
 		tw2.parallel().tween_property(bmat, "albedo_color:a", 0.0, 0.7)
 		tw2.tween_callback(bone.queue_free)
 
-	# Electric arcs (thin zigzag lines emitted outward)
 	for i in 6:
 		var arc := MeshInstance3D.new()
 		root.add_child(arc)
@@ -295,7 +332,6 @@ func _spawn_death_fx(pos: Vector3) -> void:
 		tw3.parallel().tween_property(amat, "albedo_color:a", 0.0, 0.35)
 		tw3.tween_callback(arc.queue_free)
 
-	# Fade flash and clean up root node
 	var ftw := flash.create_tween()
 	ftw.tween_property(flash, "scale", Vector3(3, 3, 3), 0.25).set_ease(Tween.EASE_OUT)
 	ftw.parallel().tween_property(flash_mat, "albedo_color:a", 0.0, 0.3)
@@ -307,6 +343,12 @@ func _force_respawn(spawn_pos: Vector3) -> void:
 	health = max_health
 	global_position = spawn_pos
 	show()
+	if is_multiplayer_authority():
+		var mode_str: String = SettingsManager.get_setting("camera_mode", "fps")
+		if mode_str != "fps":
+			player_body.show()
+	else:
+		player_body.show()
 	_invincible_timer = RESPAWN_INVINCIBLE_TIME
 	if is_multiplayer_authority():
 		weapon_manager.reset_weapons()

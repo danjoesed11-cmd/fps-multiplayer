@@ -10,8 +10,8 @@ extends Control
 @onready var player_count_label: Label   = %PlayerCountLabel
 @onready var ip_label: Label             = %IPLabel
 
-const MODES: Array[String] = ["tdm", "ctf", "zone_wars", "hide_seek", "wipeout"]
-const MODE_NAMES: Array[String] = ["Team Deathmatch", "Capture the Flag", "Zone Wars", "Hide & Seek", "Team Wipeout"]
+const MODES: Array[String] = ["tdm", "ctf", "zone_wars", "hide_seek", "wipeout", "koth", "domination"]
+const MODE_NAMES: Array[String] = ["Team Deathmatch", "Capture the Flag", "Zone Wars", "Hide & Seek", "Team Wipeout", "King of the Hill", "Domination"]
 const MAPS: Array[String] = ["arena01"]
 const MAP_NAMES: Array[String] = ["Neon Nexus"]
 

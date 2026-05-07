@@ -68,7 +68,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 
 	# Title
 	var title := Label.new()
-	title.text = "FPS ZONE"
+	title.text = "FLASHPOINT NEON ZONE"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 48)
 	title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.15, 1))
@@ -107,10 +107,20 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	wipe_btn.pressed.connect(func(): _start_ai("wipeout"))
 	row1.add_child(wipe_btn)
 
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 8)
+	vbox.add_child(row2)
 	var zone_btn := _mode_btn("Zone Wars", Color(0.1, 0.6, 0.9))
-	zone_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	zone_btn.pressed.connect(func(): _start_ai("zone_wars"))
-	vbox.add_child(zone_btn)
+	row2.add_child(zone_btn)
+	var koth_btn := _mode_btn("King of the Hill", Color(0.9, 0.7, 0.05))
+	koth_btn.pressed.connect(func(): _start_ai("koth"))
+	row2.add_child(koth_btn)
+
+	var dom_btn := _mode_btn("Domination", Color(0.15, 0.75, 0.45))
+	dom_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dom_btn.pressed.connect(func(): _start_ai("domination"))
+	vbox.add_child(dom_btn)
 
 	vbox.add_child(_divider("LAN MULTIPLAYER"))
 
