@@ -42,6 +42,8 @@ func _build_ui() -> void:
 
 	_build_left_panel(_root_hbox)
 	_build_right_panel(_root_hbox)
+	_build_waffle_link()
+	_build_top_account_bar()
 
 func _panel_bg(bg: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -95,6 +97,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_name_input)
 	vbox.add_child(_name_input)
 
+	vbox.add_child(_build_account_bar())
 	vbox.add_child(_divider("PLAY vs AI"))
 
 	var row1 := HBoxContainer.new()
@@ -401,6 +404,109 @@ func _divider(text: String) -> HBoxContainer:
 	l2.modulate.a = 0.2
 	hbox.add_child(l2)
 	return hbox
+
+# ── Account / social UI ──────────────────────────────────────
+
+func _build_account_bar() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	if AccountManager.is_logged_in():
+		var name_lbl := Label.new()
+		name_lbl.text = "Signed in as  %s" % AccountManager.get_username()
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		name_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.55, 0.9))
+		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(name_lbl)
+
+		var friends_btn := _small_btn("Friends", Color(0.1, 0.5, 0.25))
+		friends_btn.pressed.connect(_open_friends)
+		row.add_child(friends_btn)
+
+		var acct_btn := _small_btn("Account", Color(0.15, 0.3, 0.7))
+		acct_btn.pressed.connect(_open_account)
+		row.add_child(acct_btn)
+	else:
+		var lbl := Label.new()
+		lbl.text = "Playing as guest"
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(lbl)
+
+		var signin_btn := _small_btn("Sign In / Register", Color(0.35, 0.2, 0.65))
+		signin_btn.pressed.connect(_open_account)
+		row.add_child(signin_btn)
+
+	return row
+
+func _build_top_account_bar() -> void:
+	pass  # handled by _build_account_bar inside the panel
+
+func _build_waffle_link() -> void:
+	var cl := CanvasLayer.new()
+	cl.layer = 5
+	add_child(cl)
+
+	var ctrl := Control.new()
+	ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cl.add_child(ctrl)
+
+	var btn := Button.new()
+	btn.text = "Did you eat toaster waffles today?"
+	btn.flat = true
+	btn.set_anchor_and_offset(SIDE_LEFT,   1.0, -360)
+	btn.set_anchor_and_offset(SIDE_RIGHT,  1.0,  -8)
+	btn.set_anchor_and_offset(SIDE_TOP,    0.0,   8)
+	btn.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  34)
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
+	btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
+	btn.pressed.connect(_open_waffle)
+	ctrl.add_child(btn)
+
+func _open_account() -> void:
+	var panel := load("res://scenes/main/AccountPanel.gd").new()
+	panel.closed.connect(func(): _rebuild())
+	get_tree().root.add_child(panel)
+
+func _open_friends() -> void:
+	if not AccountManager.is_logged_in():
+		_open_account()
+		return
+	var panel := load("res://scenes/main/FriendsPanel.gd").new()
+	get_tree().root.add_child(panel)
+
+func _open_waffle() -> void:
+	var page := load("res://scenes/main/WafflePage.gd").new()
+	get_tree().root.add_child(page)
+
+func _rebuild() -> void:
+	if _root_hbox and is_instance_valid(_root_hbox):
+		_root_hbox.queue_free()
+		_root_hbox = null
+	for child in get_children():
+		if child is CanvasLayer:
+			child.queue_free()
+	call_deferred("_build_ui")
+
+func _small_btn(text: String, col: Color) -> Button:
+	var btn := Button.new()
+	btn.text = text
+	btn.custom_minimum_size = Vector2(0, 32)
+	btn.add_theme_font_size_override("font_size", 11)
+	for state in [["normal", col], ["hover", col.lightened(0.12)], ["pressed", col.darkened(0.1)]]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = state[1]
+		sb.corner_radius_top_left = 8; sb.corner_radius_top_right = 8
+		sb.corner_radius_bottom_left = 8; sb.corner_radius_bottom_right = 8
+		sb.content_margin_left = 10; sb.content_margin_right = 10
+		btn.add_theme_stylebox_override(state[0], sb)
+	btn.add_theme_color_override("font_color", Color(1, 1, 1))
+	btn.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	return btn
 
 # ── Game start ────────────────────────────────────────────────
 

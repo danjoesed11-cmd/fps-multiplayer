@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 EventBus="*res://autoloads/EventBus.gd"
+AccountManager="*res://autoloads/AccountManager.gd"
 SettingsManager="*res://autoloads/SettingsManager.gd"
 AudioManager="*res://autoloads/AudioManager.gd"
 NetworkManager="*res://autoloads/NetworkManager.gd"
