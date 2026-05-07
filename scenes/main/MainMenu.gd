@@ -450,10 +450,7 @@ func _build_waffle_link() -> void:
 	cl.layer = 5
 	add_child(cl)
 
-	var ctrl := Control.new()
-	ctrl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	cl.add_child(ctrl)
-
+	# Button goes directly into the CanvasLayer — no full-screen ctrl that blocks clicks
 	var btn := Button.new()
 	btn.text = "Did you eat toaster waffles today?"
 	btn.flat = true
@@ -465,7 +462,7 @@ func _build_waffle_link() -> void:
 	btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
 	btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
 	btn.pressed.connect(_open_waffle)
-	ctrl.add_child(btn)
+	cl.add_child(btn)
 
 func _open_account() -> void:
 	var panel := load("res://scenes/main/AccountPanel.gd").new()
