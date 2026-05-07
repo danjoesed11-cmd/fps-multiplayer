@@ -43,9 +43,13 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
+	var vp_size := get_viewport().get_visible_rect().size
+	if vp_size == Vector2.ZERO:
+		vp_size = Vector2(1920, 1080)
 	_root_hbox = HBoxContainer.new()
 	_root_hbox.add_theme_constant_override("separation", 0)
-	_root_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root_hbox.position = Vector2.ZERO
+	_root_hbox.size = vp_size
 	add_child(_root_hbox)
 
 	_build_left_panel(_root_hbox)
