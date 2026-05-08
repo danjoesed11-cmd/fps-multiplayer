@@ -15,7 +15,6 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_load_catalog()
-	_add_waffle_button()
 	call_deferred("_build_ui")
 
 func _add_waffle_button() -> void:
@@ -107,7 +106,6 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_name_input)
 	vbox.add_child(_name_input)
 
-	vbox.add_child(_build_account_bar())
 	vbox.add_child(_divider("PLAY vs AI"))
 
 	var row1 := HBoxContainer.new()
