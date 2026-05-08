@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://scenes/main/MainMenu.gd" id="1_mm"]
 [ext_resource type="Script" path="res://scenes/main/MainMenuBg.gd" id="2_bg"]
 
-[node name="MainMenu" type="Control"]
-anchors_preset = 15
+[node name="MainMenu" type="CanvasLayer"]
+layer = 1
 script = ExtResource("1_mm")
 
 [node name="Background" type="Node2D" parent="."]

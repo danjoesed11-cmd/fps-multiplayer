@@ -1,5 +1,5 @@
 class_name MainMenu
-extends Control
+extends CanvasLayer
 
 const CHARACTER_CATALOG_PATH := "res://data/character_catalog.json"
 
@@ -15,6 +15,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_load_catalog()
+	_add_waffle_button()
 	call_deferred("_build_ui")
 
 func _add_waffle_button() -> void:
@@ -42,13 +43,9 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
-	var vp_size := get_viewport().get_visible_rect().size
-	if vp_size == Vector2.ZERO:
-		vp_size = Vector2(1920, 1080)
 	_root_hbox = HBoxContainer.new()
 	_root_hbox.add_theme_constant_override("separation", 0)
-	_root_hbox.position = Vector2.ZERO
-	_root_hbox.size = vp_size
+	_root_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root_hbox)
 
 	_build_left_panel(_root_hbox)
@@ -106,6 +103,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_name_input)
 	vbox.add_child(_name_input)
 
+	vbox.add_child(_build_account_bar())
 	vbox.add_child(_divider("PLAY vs AI"))
 
 	var row1 := HBoxContainer.new()
