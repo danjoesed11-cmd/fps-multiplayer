@@ -10,33 +10,13 @@ var _status_label: Label
 var _char_catalog: Dictionary = {}
 var _skin_feedback: Label
 var _root_hbox: HBoxContainer = null
+var _ui_layer: CanvasLayer = null
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_load_catalog()
-	_add_waffle_button()
-	call_deferred("_build_ui")
-	get_viewport().size_changed.connect(_on_viewport_resized)
-
-func _on_viewport_resized() -> void:
-	if _root_hbox and is_instance_valid(_root_hbox):
-		_root_hbox.size = get_viewport().get_visible_rect().size
-
-func _add_waffle_button() -> void:
-	var btn := Button.new()
-	btn.text = "Did you eat toaster waffles today?"
-	btn.flat = true
-	btn.set_anchor_and_offset(SIDE_LEFT,   1.0, -360)
-	btn.set_anchor_and_offset(SIDE_RIGHT,  1.0,  -8)
-	btn.set_anchor_and_offset(SIDE_TOP,    0.0,   8)
-	btn.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  34)
-	btn.add_theme_font_size_override("font_size", 11)
-	btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
-	btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
-	btn.z_index = 10
-	btn.pressed.connect(_open_waffle)
-	add_child(btn)
+	get_tree().create_timer(0.1).timeout.connect(_build_ui)
 
 func _load_catalog() -> void:
 	var file := FileAccess.open(CHARACTER_CATALOG_PATH, FileAccess.READ)
@@ -48,14 +28,38 @@ func _load_catalog() -> void:
 # ── UI construction ───────────────────────────────────────────
 
 func _build_ui() -> void:
-	var vp_size := get_viewport().get_visible_rect().size
-	if vp_size.x < 100:
-		vp_size = Vector2(1920, 1080)
+	if _ui_layer and is_instance_valid(_ui_layer):
+		_ui_layer.queue_free()
+	_ui_layer = null
+	_root_hbox = null
+	_name_input = null
+	_ip_input = null
+	_port_input = null
+	_status_label = null
+	_skin_feedback = null
+
+	_ui_layer = CanvasLayer.new()
+	_ui_layer.layer = 5
+	add_child(_ui_layer)
+
+	var waffle_btn := Button.new()
+	waffle_btn.text = "Did you eat toaster waffles today?"
+	waffle_btn.flat = true
+	waffle_btn.set_anchor_and_offset(SIDE_LEFT,   1.0, -360)
+	waffle_btn.set_anchor_and_offset(SIDE_RIGHT,  1.0,  -8)
+	waffle_btn.set_anchor_and_offset(SIDE_TOP,    0.0,   8)
+	waffle_btn.set_anchor_and_offset(SIDE_BOTTOM, 0.0,  34)
+	waffle_btn.add_theme_font_size_override("font_size", 11)
+	waffle_btn.add_theme_color_override("font_color", Color(0.5, 0.75, 1.0, 0.5))
+	waffle_btn.add_theme_color_override("font_hover_color", Color(0.8, 1.0, 1.0, 1.0))
+	waffle_btn.z_index = 10
+	waffle_btn.pressed.connect(_open_waffle)
+	_ui_layer.add_child(waffle_btn)
+
 	_root_hbox = HBoxContainer.new()
 	_root_hbox.add_theme_constant_override("separation", 0)
-	_root_hbox.position = Vector2.ZERO
-	_root_hbox.size = vp_size
-	add_child(_root_hbox)
+	_root_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_ui_layer.add_child(_root_hbox)
 
 	_build_left_panel(_root_hbox)
 	_build_right_panel(_root_hbox)
@@ -102,6 +106,7 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	tag.add_theme_color_override("font_color", Color(1, 1, 1, 0.45))
 	vbox.add_child(tag)
 
+	vbox.add_child(_build_account_bar())
 	vbox.add_child(_sep())
 
 	# Name input
@@ -336,19 +341,16 @@ func _skin_card(slot: String, item_id: String, data: Dictionary, is_equipped: bo
 func _on_equip(slot: String, item_id: String, cost: int, pts_lbl: Label) -> void:
 	var pts: int = SettingsManager.get_setting("cosmetic_points", 0)
 	if cost > 0 and pts < cost:
-		_skin_feedback.text = "Not enough points"
-		_skin_feedback.add_theme_color_override("font_color", Color(1, 0.4, 0.3))
+		if _skin_feedback:
+			_skin_feedback.text = "Not enough points"
+			_skin_feedback.add_theme_color_override("font_color", Color(1, 0.4, 0.3))
 		return
 	if cost > 0:
 		SettingsManager.set_setting("cosmetic_points", pts - cost)
 	SettingsManager.set_setting("cosmetic_%s" % slot, item_id)
-	_skin_feedback.text = "Equipped!"
-	_skin_feedback.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
-	pts_lbl.text = "%d pts  (earn 500+ pts per match win)" % SettingsManager.get_setting("cosmetic_points", 0)
-	if _root_hbox and is_instance_valid(_root_hbox):
-		_root_hbox.queue_free()
-		_root_hbox = null
-	_build_ui()
+	if pts_lbl and is_instance_valid(pts_lbl):
+		pts_lbl.text = "%d pts  (earn 500+ pts per match win)" % SettingsManager.get_setting("cosmetic_points", 0)
+	_rebuild()
 
 # ── Helpers ───────────────────────────────────────────────────
 
@@ -465,7 +467,6 @@ func _build_account_bar() -> HBoxContainer:
 
 	return row
 
-
 func _open_account() -> void:
 	var panel := load("res://scenes/main/AccountPanel.gd").new()
 	panel.closed.connect(func(): _rebuild())
@@ -483,10 +484,11 @@ func _open_waffle() -> void:
 	get_tree().root.add_child(page)
 
 func _rebuild() -> void:
-	if _root_hbox and is_instance_valid(_root_hbox):
-		_root_hbox.queue_free()
-		_root_hbox = null
-	call_deferred("_build_ui")
+	if _ui_layer and is_instance_valid(_ui_layer):
+		_ui_layer.queue_free()
+	_ui_layer = null
+	_root_hbox = null
+	get_tree().create_timer(0.05).timeout.connect(_build_ui)
 
 func _small_btn(text: String, col: Color) -> Button:
 	var btn := Button.new()
@@ -555,4 +557,3 @@ func _save_settings() -> void:
 			SettingsManager.set_setting("display_name", n)
 	if _ip_input:
 		SettingsManager.set_setting("last_ip", _ip_input.text.strip_edges())
-
