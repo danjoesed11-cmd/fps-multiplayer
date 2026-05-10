@@ -16,10 +16,12 @@ func _ready() -> void:
 	get_tree().paused = false
 	_load_catalog()
 	_add_waffle_button()
-	_build_ui()
-	get_viewport().size_changed.connect(func():
-		if _root_hbox and is_instance_valid(_root_hbox):
-			_root_hbox.size = get_viewport().get_visible_rect().size)
+	call_deferred("_build_ui")
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+func _on_viewport_resized() -> void:
+	if _root_hbox and is_instance_valid(_root_hbox):
+		_root_hbox.size = get_viewport().get_visible_rect().size
 
 func _add_waffle_button() -> void:
 	var btn := Button.new()
@@ -110,7 +112,6 @@ func _build_left_panel(parent: HBoxContainer) -> void:
 	_style_input(_name_input)
 	vbox.add_child(_name_input)
 
-	vbox.add_child(_build_account_bar())
 	vbox.add_child(_divider("PLAY vs AI"))
 
 	var row1 := HBoxContainer.new()
